@@ -19,13 +19,10 @@ public class Node {
         ObjectOutputStream output = new ObjectOutputStream(soc.getOutputStream());
         ObjectInputStream input = new ObjectInputStream(soc.getInputStream());
 
-        System.out.println("Enter username: ");
+        System.out.println("Enter GUID: ");
         String username = sc.next();
         output.writeUTF(username);
         output.flush();
-
-
-
 
 
     }
