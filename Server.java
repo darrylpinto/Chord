@@ -1,13 +1,15 @@
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Created by Darryl Pinto on 3/11/2018.
+ * Created by Darryl Pinto on 3/08/2018.
  */
 
 
@@ -22,8 +24,8 @@ public class Server implements Runnable {
     static ConcurrentHashMap<Integer, FingerTable> tableMap = new ConcurrentHashMap<>();
     static ConcurrentHashMap<Integer, Boolean> onlineNodes = new ConcurrentHashMap<>();
 
-    public static void main(String[] args) {
-
+    public static void main(String[] args) throws UnknownHostException {
+        System.out.println("Server IP:"+ InetAddress.getLocalHost());
         new Thread(new Server()).start();
 
         for (int i = 0; i < N; i++) {
@@ -63,16 +65,17 @@ public class Server implements Runnable {
     private static void computeEachTable(int k) {
 
         int[][] table = new int[n][3];
+        InetAddress[] ip = new InetAddress[n];
         for (int i = 0; i < n; i++) {
 
             table[i][0] = i;
             table[i][1] = (k + (int) Math.pow(2, i)) % 16;
 
             table[i][2] = findSuccessor(table[i][1]);   // successor
-
+            ip[i] = connectionMap.get(table[i][2]).getInetAddress();
         }
 
-        tableMap.put(k, new FingerTable(k, table));
+        tableMap.put(k, new FingerTable(k, table, ip));
 
     }
 
@@ -120,17 +123,10 @@ public class Server implements Runnable {
 
     }
 
-    @Override
-    public void run() {
-
-        exitUser();
-    }
-
     public static void exitUser() {
 
         try {
             ServerSocket serverSoc = new ServerSocket(6001);
-            System.out.println("listening on 6001");
 
             while (true) {
 
@@ -138,7 +134,7 @@ public class Server implements Runnable {
 
                 ObjectInputStream input = new ObjectInputStream(socket.getInputStream());
                 int userToExit = input.readInt();
-                System.out.println("Exit Activated:"+ userToExit);
+                System.out.println("Exit Activated:" + userToExit);
 
                 tableMap.remove(userToExit);
                 onlineNodes.remove(userToExit);
@@ -149,7 +145,7 @@ public class Server implements Runnable {
                 ObjectOutputStream exitStatus = new ObjectOutputStream(socket.getOutputStream());
                 exitStatus.writeUTF("EXIT");
                 exitStatus.flush();
-                System.out.println("User left:"+userToExit);
+                System.out.println("User left:" + userToExit);
 
             }
 
@@ -157,5 +153,11 @@ public class Server implements Runnable {
             e.printStackTrace();
         }
 
+    }
+
+    @Override
+    public void run() {
+
+        exitUser();
     }
 }

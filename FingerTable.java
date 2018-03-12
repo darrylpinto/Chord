@@ -1,16 +1,19 @@
 import java.io.Serializable;
+import java.net.InetAddress;
 
 /**
  * Created by Darryl Pinto on 3/11/2018.
  */
-public class FingerTable implements Serializable{
+public class FingerTable implements Serializable {
 
     int[][] table;
+    InetAddress[] ip;
     int k;
 
-    public FingerTable(int k, int[][] table) {
+    public FingerTable(int k, int[][] table, InetAddress[] ip) {
         this.k = k;
         this.table = table;
+        this.ip = ip;
     }
 
     public FingerTable() {
@@ -34,4 +37,5 @@ public class FingerTable implements Serializable{
 
         return str;
     }
+
 }
