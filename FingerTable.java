@@ -1,7 +1,9 @@
+import java.io.Serializable;
+
 /**
  * Created by Darryl Pinto on 3/11/2018.
  */
-public class FingerTable {
+public class FingerTable implements Serializable{
 
     int[][] table;
     int k;
@@ -9,6 +11,10 @@ public class FingerTable {
     public FingerTable(int k, int[][] table) {
         this.k = k;
         this.table = table;
+    }
+
+    public FingerTable() {
+
     }
 
     public String toString() {

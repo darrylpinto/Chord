@@ -21,36 +21,47 @@ class ServerOperation implements Runnable {
 
     @Override
     public void run() {
-        String _guid ="";
+        String _guid = "";
+        ObjectOutputStream output = null;
+        ObjectInputStream input = null;
         try {
 
             //1
-            ObjectOutputStream output = new ObjectOutputStream(socket.getOutputStream());
-            ObjectInputStream input = new ObjectInputStream(socket.getInputStream());
-
+            output = new ObjectOutputStream(socket.getOutputStream());
+            input = new ObjectInputStream(socket.getInputStream());
 
             _guid = input.readUTF();
-
 
             int guid = Integer.parseInt(_guid);
 
             if (!Server.nodeNeighbors.containsKey(guid)) {
                 System.out.println("Invalid GUID:" + guid);
+                output.writeUTF("Q"); // Exit Condition
+                output.flush();
                 socket.close();
             } else {
+
                 System.out.println("Node connected:" + guid);
+                output.writeUTF("Works");
+                output.flush();
                 Server.connectionMap.put(guid, socket);
                 Server.onlineNodes.put(guid, true);
                 Server.computeTables();
+                Server.sendTables();
 
-                System.out.println(Server.tableMap);
             }
 
         } catch (IOException e) {
             e.printStackTrace();
-        }
-        catch(NumberFormatException e){
+        } catch (NumberFormatException e) {
             System.out.println("Invalid GUID:" + _guid);
+            try {
+                output.writeUTF("Q");
+                output.flush();
+                socket.close();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
 
         }
     }
@@ -58,7 +69,7 @@ class ServerOperation implements Runnable {
 
 public class Server {
     private static final int n = 4;
-    private static final int N = (int) Math.pow(2,n);
+    private static final int N = (int) Math.pow(2, n);
 
     private static final int serverPort = 6000;
 
@@ -67,18 +78,15 @@ public class Server {
     static ConcurrentHashMap<Integer, FingerTable> tableMap = new ConcurrentHashMap<>();
     static ConcurrentHashMap<Integer, Boolean> onlineNodes = new ConcurrentHashMap<>();
 
-
     public static void main(String[] args) {
 
-
-        for (int i = 0; i <N; i++) {
-
+        for (int i = 0; i < N; i++) {
             nodeNeighbors.put(i, (i + 1) % N);
         }
 
         ServerSocket serverSock = null;
         try {
-
+            System.out.println("Starting Server");
             serverSock = new ServerSocket(serverPort);
         } catch (IOException e) {
             e.getMessage();
@@ -88,8 +96,8 @@ public class Server {
             Socket soc = null;
             try {
                 soc = serverSock.accept();
-
                 new Thread(new ServerOperation(soc)).start();
+
             } catch (IOException e) {
                 e.getMessage();
             }
@@ -103,14 +111,11 @@ public class Server {
 
             if (onlineNodes.containsKey(i)) {
                 computeEachTable(i);
-
             }
         }
-
     }
 
     public static void computeEachTable(int k) {
-
 
         int[][] table = new int[n][3];
         for (int i = 0; i < n; i++) {
@@ -122,7 +127,7 @@ public class Server {
 
         }
 
-        tableMap.put(k, new FingerTable(k,table));
+        tableMap.put(k, new FingerTable(k, table));
 
     }
 
@@ -142,5 +147,32 @@ public class Server {
             }
 
         }
+    }
+
+    public static void sendTables() {
+
+        for(int i=0;i<N;i++){
+            if(onlineNodes.containsKey(i) && onlineNodes.get(i)){
+                Socket soc = connectionMap.get(i);
+                try {
+                    Socket socFinger = new Socket(soc.getInetAddress(), 7000+i);
+
+                    ObjectOutputStream obj = new ObjectOutputStream(socFinger.getOutputStream());
+                    obj.writeObject(tableMap.get(i));
+                    obj.flush();
+
+                    socFinger.close();
+
+
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+
+        }
+
+
     }
 }
