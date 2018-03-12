@@ -22,6 +22,9 @@ public class Node implements Runnable {
         //Server IP
         String host = "LocalHost";
         Scanner sc = new Scanner(System.in);
+	System.out.println("Enter Server IP");
+	host = sc.next();
+
         Socket soc = new Socket(host, 6000);
 
         // 1
