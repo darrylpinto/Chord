@@ -60,7 +60,18 @@ public class Node implements Runnable {
                 case "q":
                 case "Q":
                     System.out.println("Preparing to Stop");
-                    // Transfer data
+                    Socket socExit = new Socket(host, 6001);
+                    ObjectOutputStream exitOutput = new ObjectOutputStream(socExit.getOutputStream());
+                    exitOutput.writeInt(ID);
+                    exitOutput.flush();
+                    System.out.println("Transferring data");
+
+                    ObjectInputStream exitStatus = new ObjectInputStream(socExit.getInputStream());
+                    exitStatus.readUTF();
+                    System.out.println("User "+ ID +" has stopped");
+                    socExit.close();
+                    System.exit(0);
+
                     break;
                 case "c":
                 case "C":
@@ -106,7 +117,6 @@ public class Node implements Runnable {
 
     @Override
     public void run() {
-        System.out.println("In run method");
         fingerTableUpdate();
     }
 }

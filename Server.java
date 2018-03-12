@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -10,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 
 
-public class Server {
+public class Server implements Runnable {
     private static final int n = 4;
     private static final int N = (int) Math.pow(2, n);
 
@@ -22,6 +23,8 @@ public class Server {
     static ConcurrentHashMap<Integer, Boolean> onlineNodes = new ConcurrentHashMap<>();
 
     public static void main(String[] args) {
+
+        new Thread(new Server()).start();
 
         for (int i = 0; i < N; i++) {
             nodeNeighbors.put(i, (i + 1) % N);
@@ -114,6 +117,45 @@ public class Server {
 
         }
 
+
+    }
+
+    @Override
+    public void run() {
+
+        exitUser();
+    }
+
+    public static void exitUser() {
+
+        try {
+            ServerSocket serverSoc = new ServerSocket(6001);
+            System.out.println("listening on 6001");
+
+            while (true) {
+
+                Socket socket = serverSoc.accept();
+
+                ObjectInputStream input = new ObjectInputStream(socket.getInputStream());
+                int userToExit = input.readInt();
+                System.out.println("Exit Activated:"+ userToExit);
+
+                tableMap.remove(userToExit);
+                onlineNodes.remove(userToExit);
+
+                computeTables();
+                sendTables();
+
+                ObjectOutputStream exitStatus = new ObjectOutputStream(socket.getOutputStream());
+                exitStatus.writeUTF("EXIT");
+                exitStatus.flush();
+                System.out.println("User left:"+userToExit);
+
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }
 }
