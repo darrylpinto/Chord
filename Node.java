@@ -10,6 +10,8 @@ import java.util.Scanner;
  * Created by Darryl Pinto on 3/11/2018.
  */
 public class Node implements Runnable {
+    private static final int n = 4;
+    private static final int N = (int) Math.pow(2, n);
 
     static FingerTable fingerTable = new FingerTable();
     static int ID;
@@ -31,7 +33,7 @@ public class Node implements Runnable {
         output.flush();
 
         String status = input.readUTF();
-        if(status.equalsIgnoreCase("Q")){
+        if (status.equalsIgnoreCase("Q")) {
             System.out.println("Exiting..");
             System.exit(10);
         }
@@ -39,41 +41,59 @@ public class Node implements Runnable {
 
         new Thread(new Node()).start();
 
-        while(true){
+        while (true) {
+            String str = "p - print FingerTable\n";
+            str += "q - quit\n";
+            str += "c - create File\n";
+            str += "r - Retrieve File";
 
-            System.out.println("Enter p to print FingerTable");
+            System.out.println(str);
             String choice = sc.next();
 
-            switch(choice){
-                case "p":case "P":
-                    synchronized (fingerTable){
+            switch (choice) {
+                case "p":
+                case "P":
+                    synchronized (fingerTable) {
                         System.out.println(fingerTable); // Get latest fingerTable
                     }
                     break;
+                case "q":
+                case "Q":
+                    System.out.println("Preparing to Stop");
+                    // Transfer data
+                    break;
+                case "c":
+                case "C":
+                    System.out.println("Enter fileName:");
+                    String name = sc.next();
+                    reRoute(name);
+                    break;
+                case "r":
+                case "R":
+                    break;
 
             }
-
         }
+    }
+
+    private static void reRoute(String name) {
+        int hash = name.hashCode() % N;
     }
 
     public static void fingerTableUpdate() {
 
         try {
-            System.out.println("Starting node_server_socket at "+ (7000 + ID));
-            ServerSocket serverSoc = new ServerSocket(7000+ID);
+            ServerSocket serverSoc = new ServerSocket(7000 + ID);
 
             while (true) {
-                System.out.println("Listening node_server_socket at "+ (7000 + ID));
 
                 Socket socket = serverSoc.accept();
-
                 ObjectInputStream input = new ObjectInputStream(socket.getInputStream());
-
                 Object obj = input.readObject();
 
                 synchronized (fingerTable) {
                     fingerTable = (FingerTable) obj;
-                    System.out.println("Updated FingerTable");
+                    System.out.println(">>>Updated FingerTable");
                 }
 
             }
