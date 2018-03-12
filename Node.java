@@ -4,6 +4,7 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.Scanner;
 
+
 /**
  * Created by Darryl Pinto on 3/11/2018.
  */
@@ -23,6 +24,7 @@ public class Node {
         String username = sc.next();
         output.writeUTF(username);
         output.flush();
+
 
 
     }
