@@ -38,15 +38,13 @@ public class NodeRetriever implements Runnable {
                     if (!dir.exists()) {
                         output.writeBoolean(false);
                         output.flush();
-                        continue;
-//                        return;
+
                     } else {
                         File file = new File("" + guid + "\\Content.csv");
                         if (!file.exists()) {
                             output.writeBoolean(false);
                             output.flush();
-                            continue;
-//                            return;
+
                         } else {
                             FileReader fr = new FileReader(file);
                             BufferedReader br = new BufferedReader(fr);
@@ -59,15 +57,15 @@ public class NodeRetriever implements Runnable {
                                     output.flush();
                                     flag = true;
                                     break;
-//                                    return;
+
                                 }
                             }
-                            if(flag)
+                            if (flag)
                                 continue;
 
                             output.writeBoolean(false);
                             output.flush();
-//                            return;
+
 
                         }
                     }
@@ -75,7 +73,7 @@ public class NodeRetriever implements Runnable {
                     boolean result = Node.retrieve(name);
                     output.writeBoolean(result);
                     output.flush();
-//                    return;
+
                 }
 
             }

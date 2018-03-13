@@ -9,10 +9,10 @@ import java.net.Socket;
  * Created by Darryl Pinto on 3/13/2018.
  */
 
-public class NodeDeleter implements Runnable {
+public class QuitHandler implements Runnable {
     int guid;
 
-    public NodeDeleter(int id) {
+    public QuitHandler(int id) {
 
         this.guid = id;
     }

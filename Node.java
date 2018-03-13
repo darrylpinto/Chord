@@ -45,7 +45,7 @@ public class Node implements Runnable {
         // Node thread to listen for FingerTable Updates
         new Thread(new Node()).start();
         new Thread(new NodeListener(Node.guid)).start();
-        new Thread(new NodeDeleter(Node.guid)).start();
+        new Thread(new QuitHandler(Node.guid)).start();
         new Thread(new NodeRetriever(Node.guid)).start();
 
 
@@ -367,11 +367,11 @@ public class Node implements Runnable {
             }
 
             br.close();
+            fr.close();
 
             if (files.get(0).delete()) {
-                System.out.println(files.get(0)+ "content sent to " + nextSuccessor + " and deleted locally");
-            }
-            else{
+                System.out.println(files.get(0) + "content sent to " + nextSuccessor + " and deleted locally");
+            } else {
                 System.out.println("Error in DELETE");
             }
             ObjectOutputStream data_output = new ObjectOutputStream(socNext.getOutputStream());
