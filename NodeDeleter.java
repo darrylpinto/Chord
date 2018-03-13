@@ -29,7 +29,6 @@ public class NodeDeleter implements Runnable {
             while (true) {
 
                 Socket socket = serverSocket.accept();
-
                 ObjectInputStream data_input = new ObjectInputStream(socket.getInputStream());
 
                 String data = data_input.readUTF();

@@ -1,3 +1,4 @@
+import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -25,7 +26,9 @@ public class Server implements Runnable {
     static ConcurrentHashMap<Integer, Boolean> onlineNodes = new ConcurrentHashMap<>();
 
     public static void main(String[] args) throws UnknownHostException {
-System.out.println("Server IP:" + InetAddress.getLocalHost());
+
+        deleteFiles();
+        System.out.println("Server IP:" + InetAddress.getLocalHost());
         new Thread(new Server()).start();
 
         for (int i = 0; i < N; i++) {
@@ -49,6 +52,16 @@ System.out.println("Server IP:" + InetAddress.getLocalHost());
             } catch (IOException e) {
                 e.getMessage();
             }
+        }
+    }
+
+    private static void deleteFiles() {
+
+        for(int i=0;i< N;i++){
+            File file = new File(i+"\\Content.csv") ;
+            if (file.exists())
+                file.delete();
+
         }
     }
 

@@ -15,7 +15,7 @@ public class Node implements Runnable {
     private static final int N = (int) Math.pow(2, n);
 
     static FingerTable fingerTable = new FingerTable();
-    static int ID;
+    static int guid;
 
     public static void main(String[] args) throws IOException {
 
@@ -40,12 +40,13 @@ public class Node implements Runnable {
             System.out.println("Exiting..");
             System.exit(10);
         }
-        ID = Integer.parseInt(guid);
+        Node.guid = Integer.parseInt(guid);
 
         // Node thread to listen for FingerTable Updates
         new Thread(new Node()).start();
-        new Thread(new NodeListener(ID)).start();
-        new Thread(new NodeDeleter(ID)).start();
+        new Thread(new NodeListener(Node.guid)).start();
+        new Thread(new NodeDeleter(Node.guid)).start();
+        new Thread(new NodeRetriever(Node.guid)).start();
 
 
         while (true) {
@@ -80,7 +81,11 @@ public class Node implements Runnable {
                 case "R":
                     System.out.println("Enter fileName to retrieve:");
                     String retrieve_name = sc.next();
-                    retrieve(retrieve_name);
+                    if (retrieve(retrieve_name)) {
+                        System.out.println(retrieve_name + " present in DHT Chord");
+                    } else
+                        System.out.println(retrieve_name + " NOT present in DHT Chord");
+
 
                     break;
 
@@ -88,76 +93,159 @@ public class Node implements Runnable {
         }
     }
 
-    private static void retrieve(String name) {
+    static boolean retrieve(String name) throws IOException {
         int target = Math.abs(name.hashCode() % N);
+
+        if (target == guid) {
+            File dir = new File("" + guid);
+
+            if (!dir.exists()) {
+                return false;
+            } else {
+                File file = new File("" + guid + "\\Content.csv");
+                if (!file.exists()) {
+                    return false;
+                } else {
+                    FileReader fr = new FileReader(file);
+                    BufferedReader br = new BufferedReader(fr);
+                    String line;
+
+                    while ((line = br.readLine()) != null) {
+                        String[] values = line.trim().split(",");
+                        if (values[1].equals(name)) {
+                            return true;
+                        }
+                    }
+                    return false;
+
+                }
+            }
+
+        }
         int successor = -1;
         System.out.println("Hash(" + name + ")%" + N + "=" + target);
         InetAddress target_ip = null;
 
         int minimum = Integer.MAX_VALUE;
         boolean target_present = false;
+        int kplus2i = -1;
+
         try {
             InetAddress potential_target_ip = InetAddress.getLocalHost();
-            // TO BE CONTINUED
+            for (int i = 0; i < fingerTable.table.length; i++) {
+
+                // base Case
+                synchronized (fingerTable) {
+                    if (target - fingerTable.table[i][1] == 0) {
+                        target_ip = fingerTable.ip[i];
+                        target_present = true;
+                        successor = fingerTable.table[i][2];
+                    }
+                }
+
+                if (target_present) {
+
+                    return toRetrieve(target_ip, name, successor, true);
+                }
+
+                synchronized (fingerTable) {
+
+                    int difference = target - fingerTable.table[i][1];
+
+                    if (difference < 0) {
+                        difference += 16;
+                    }
+
+                    if (difference < minimum) {
+                        minimum = difference;
+                        potential_target_ip = fingerTable.ip[i];
+                        successor = fingerTable.table[i][2];
+                        kplus2i = fingerTable.table[i][1];
+
+                    }
+                }
+
+            }
+
+            target_ip = potential_target_ip;
+
+            System.out.printf("Rerouting Search for '%s' to node %d at %s\n",
+                    name, successor, target_ip);
+
+            if (target > kplus2i && target < successor) {
+                return toRetrieve(target_ip, name, successor, true);
+            } /*else if (target > kplus2i && target > successor) {
+                return toRetrieve(target_ip, name, successor, true);
+            } else if (target < kplus2i && target < successor) {
+                return toRetrieve(target_ip, name, successor, true);
+            }*/ else {
+                return toRetrieve(target_ip, name, successor, false);
+            }
+
 
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        return false;
+    }
+
+    private static boolean toRetrieve(InetAddress target_ip, String name,
+                                      int successor, boolean b) throws IOException {
+
+        Socket socket = new Socket(target_ip, 10000 + successor);
+        System.out.println("Connection request sent to port " + (10000 + successor));
+
+        ObjectOutputStream output = new ObjectOutputStream(socket.getOutputStream());
+        output.writeUTF(name);
+        output.flush();
+
+        output.writeBoolean(b);
+        output.flush();
+
+
+        ObjectInputStream input = new ObjectInputStream(socket.getInputStream());
+        boolean result = input.readBoolean();
+
+        socket.close();
+
+        return result;
+
     }
 
 
-    static void quit(String host) throws IOException {
-        System.out.println("Preparing to Stop");
-
-        File dir = new File("" + ID);
-        if (dir.exists()) {
-            InetAddress nextTarget;
-            int nextSuccessor;
-            synchronized (fingerTable) {
-                nextSuccessor = fingerTable.table[0][2];
-                nextTarget = fingerTable.ip[0];
-
-            }
-            Socket socNext = new Socket(nextTarget, 9000 + nextSuccessor);
-            ArrayList<File> files = new ArrayList<>(Arrays.asList(dir.listFiles()));
-
-            FileReader fr = new FileReader(files.get(0));
-            BufferedReader br = new BufferedReader(fr);
-
-            String line;
-            String data = "";
-            while ((line = br.readLine()) != null) {
-                data += line;
-                data += "\n";
-            }
-
-            br.close();
-
-            if (files.get(0).delete()) {
-                System.out.println("File sent to " + nextSuccessor + " and deleted locally");
-            }
-            ObjectOutputStream data_output = new ObjectOutputStream(socNext.getOutputStream());
-            data_output.writeUTF(data);
-            data_output.flush();
-
-            socNext.close();
-
-        }
-        Socket socExit = new Socket(host, 6001);
-        ObjectOutputStream exitOutput = new ObjectOutputStream(socExit.getOutputStream());
-        exitOutput.writeInt(ID);
-        exitOutput.flush();
-
-        ObjectInputStream exitStatus = new ObjectInputStream(socExit.getInputStream());
-        exitStatus.readUTF();
-        System.out.println("User " + ID + " has stopped");
-        socExit.close();
-        System.exit(0);
-    }
-
-    static void route(String name) {
+    static void route(String name) throws IOException {
 
         int target = Math.abs(name.hashCode() % N);
+        if (target == guid) {
+            File dir = new File("" + guid);
+            if (dir.mkdir()) {
+                System.out.println("----New directory created:" + dir);
+            }
+
+            File file = new File("" + guid + "\\Content.csv");
+
+            if (file.createNewFile()) {
+
+                FileWriter writer = new FileWriter(file);
+
+                // csv will contain: target node, name_of_file
+                writer.write(target + "," + name + "\n");
+                System.out.printf("'%d,%s' written to file %s\n",
+                        target, name, file.getName());
+                writer.close();
+            } else {
+
+                FileWriter writer = new FileWriter(file, true);
+                writer.write(target + "," + name + "\n");
+                System.out.printf("'%d,%s' appended to file %s\n",
+                        target, name, file.getName());
+                writer.close();
+            }
+            return;
+
+        }
+
         int successor = -1;
         System.out.println("Hash(" + name + ")%" + N + "=" + target);
         InetAddress target_ip = null;
@@ -167,6 +255,7 @@ public class Node implements Runnable {
         int kplus2i = -1;
         try {
             InetAddress potential_target_ip = InetAddress.getLocalHost();
+
 
             for (int i = 0; i < fingerTable.table.length; i++) {
 
@@ -213,11 +302,11 @@ public class Node implements Runnable {
 
             if (target > kplus2i && target < successor) {
                 sendFileToTarget(target_ip, name, target, successor, true);
-            } else if (target > kplus2i && target > successor ) {
+            } /*else if (target > kplus2i && target > successor) {
                 sendFileToTarget(target_ip, name, target, successor, true);
             } else if (target < kplus2i && target < successor) {
                 sendFileToTarget(target_ip, name, target, successor, true);
-            } else {
+            }*/ else {
                 sendFileToTarget(target_ip, name, target, successor, false);
             }
 
@@ -235,7 +324,7 @@ public class Node implements Runnable {
 
         // FileContent transfer socket
         Socket socket = new Socket(target_ip, 8000 + successor);
-        System.out.println("Connection request sent to port" + (8000 + successor));
+        System.out.println("Connection request sent to port " + (8000 + successor));
 
         // 5
         ObjectOutputStream output = new ObjectOutputStream(socket.getOutputStream());
@@ -252,11 +341,63 @@ public class Node implements Runnable {
 
     }
 
+    static void quit(String host) throws IOException {
+        System.out.println("Preparing to Stop");
+
+        File dir = new File("" + guid);
+        if (dir.exists()) {
+            InetAddress nextTarget;
+            int nextSuccessor;
+            synchronized (fingerTable) {
+                nextSuccessor = fingerTable.table[0][2];
+                nextTarget = fingerTable.ip[0];
+
+            }
+            Socket socNext = new Socket(nextTarget, 9000 + nextSuccessor);
+            ArrayList<File> files = new ArrayList<>(Arrays.asList(dir.listFiles()));
+
+            FileReader fr = new FileReader(files.get(0));
+            BufferedReader br = new BufferedReader(fr);
+
+            String line;
+            String data = "";
+            while ((line = br.readLine()) != null) {
+                data += line;
+                data += "\n";
+            }
+
+            br.close();
+
+            if (files.get(0).delete()) {
+                System.out.println(files.get(0)+ "content sent to " + nextSuccessor + " and deleted locally");
+            }
+            else{
+                System.out.println("Error in DELETE");
+            }
+            ObjectOutputStream data_output = new ObjectOutputStream(socNext.getOutputStream());
+            data_output.writeUTF(data);
+            data_output.flush();
+
+            socNext.close();
+
+        }
+        Socket socExit = new Socket(host, 6001);
+        ObjectOutputStream exitOutput = new ObjectOutputStream(socExit.getOutputStream());
+        exitOutput.writeInt(guid);
+        exitOutput.flush();
+
+        ObjectInputStream exitStatus = new ObjectInputStream(socExit.getInputStream());
+        exitStatus.readUTF();
+        System.out.println("User " + guid + " has stopped");
+        socExit.close();
+        System.exit(0);
+    }
+
 
     public static void fingerTableUpdate() {
 
         try {
-            ServerSocket serverSoc = new ServerSocket(7000 + ID);
+            ServerSocket serverSoc = new ServerSocket(7000 + guid);
 
             while (true) {
 
