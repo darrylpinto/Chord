@@ -1,9 +1,9 @@
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Scanner;
 
 
@@ -47,6 +47,8 @@ public class Node implements Runnable {
         // NodeListener Thread
         new Thread(new NodeListener(ID)).start();
 
+        new Thread(new NodeDeleter(ID)).start();
+
 
         while (true) {
             String str = "p - print FingerTable\n";
@@ -67,11 +69,44 @@ public class Node implements Runnable {
                 case "q":
                 case "Q":
                     System.out.println("Preparing to Stop");
+
+                    File dir = new File("" + ID);
+                    if (dir.exists()) {
+                        int nextSuccessor = fingerTable.table[0][2];
+                        InetAddress nextTarget = fingerTable.ip[0];
+                        Socket socNext = new Socket(nextTarget, 9000 + nextSuccessor);
+                        ArrayList<File> files = new ArrayList<File>(Arrays.asList(dir.listFiles()));
+
+
+                        FileReader fr = new FileReader(files.get(0));
+                        BufferedReader br = new BufferedReader(fr);
+
+                        String line;
+                        String data = "";
+                        while ((line = br.readLine()) != null) {
+                            data += line;
+                            data += "\n";
+                        }
+
+                        br.close();
+
+                        if (files.get(0).delete()) {
+                            System.out.println("File sent to "+ nextSuccessor+" and deleted locally");
+                        }
+                        ObjectOutputStream data_output = new ObjectOutputStream(socNext.getOutputStream());
+                        data_output.writeUTF(data);
+                        data_output.flush();
+
+                        socNext.close();
+
+
+                    }
+
+
                     Socket socExit = new Socket(host, 6001);
                     ObjectOutputStream exitOutput = new ObjectOutputStream(socExit.getOutputStream());
                     exitOutput.writeInt(ID);
                     exitOutput.flush();
-                    System.out.println("Transferring data");
 
                     ObjectInputStream exitStatus = new ObjectInputStream(socExit.getInputStream());
                     exitStatus.readUTF();
@@ -95,7 +130,7 @@ public class Node implements Runnable {
         }
     }
 
-     static void route(String name) {
+    static void route(String name) {
 
         int target = Math.abs(name.hashCode() % N);
         int successor = -1;
@@ -120,15 +155,15 @@ public class Node implements Runnable {
                 if (target_present) {
                     System.out.println("Target present at " + successor);
                     System.out.printf("Preparing to send filename %s to %d \n", name, successor);
-                    sendFileToTarget(target_ip, name, successor,true);
+                    sendFileToTarget(target_ip, name, target, successor, true);
                     return;
                 }
 
                 synchronized (fingerTable) {
 
-                    int difference = target - fingerTable.table[i][1] ;
+                    int difference = target - fingerTable.table[i][1];
 
-                    if (difference < 0){
+                    if (difference < 0) {
                         difference += 16;
                     }
 
@@ -146,7 +181,7 @@ public class Node implements Runnable {
 
             System.out.printf("Rerouting filename %s to node %d at %s\n", name, successor, target_ip);
 
-            sendFileToTarget(target_ip, name, successor,false);
+            sendFileToTarget(target_ip, name, target, successor, false);
 
 
         } catch (IOException e) {
@@ -156,7 +191,8 @@ public class Node implements Runnable {
 
     }
 
-    private static void sendFileToTarget(InetAddress target_ip, String name, int successor, boolean b) throws IOException {
+    private static void sendFileToTarget(InetAddress target_ip, String name, int target,
+                                         int successor, boolean b) throws IOException {
         // open socket, send data and return
 
         // FileContent transfer socket
@@ -165,7 +201,7 @@ public class Node implements Runnable {
 
         // 5
         ObjectOutputStream output = new ObjectOutputStream(socket.getOutputStream());
-        FileContent fc = new FileContent(name, successor);
+        FileContent fc = new FileContent(name, target);
         output.writeObject(fc);
         output.flush();
 

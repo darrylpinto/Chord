@@ -41,10 +41,10 @@ public class NodeListener implements Runnable {
                     if (dir.mkdir()) {
                         System.out.println("----New directory created:" + dir);
                     }
-                    File file = new File("" + guid + "//Content.csv");
+                    File file = new File("" + guid + "\\Content.csv");
 
                     if (file.createNewFile()) {
-                        System.out.println("-->File is created:" + file);
+
                         FileWriter writer = new FileWriter(file);
 
                         // csv will contain: target node, name_of_file
@@ -52,7 +52,7 @@ public class NodeListener implements Runnable {
                         System.out.printf("'%d,%s' written to file %s\n", fc.target_node, fc.name_of_file, file.getName());
                         writer.close();
                     } else {
-                        System.out.println("-->File already exists.");
+
                         FileWriter writer = new FileWriter(file, true);
                         writer.write(fc.target_node + "," + fc.name_of_file + "\n");
                         System.out.printf("'%d,%s' appended to file %s\n", fc.target_node, fc.name_of_file, file.getName());
