@@ -22,8 +22,8 @@ public class Node implements Runnable {
         //Server IP
         String host = "LocalHost";
         Scanner sc = new Scanner(System.in);
-	System.out.println("Enter Server IP");
-	host = sc.next();
+        System.out.println("Enter Server IP");
+        host = sc.next();
 
         Socket soc = new Socket(host, 6000);
 
@@ -86,7 +86,7 @@ public class Node implements Runnable {
                     System.out.println("Enter fileName:");
                     String name = sc.next();
 
-                    reRoute(name);
+                    route(name);
                     break;
                 case "r":
                 case "R":
@@ -96,46 +96,56 @@ public class Node implements Runnable {
         }
     }
 
-    private static void reRoute(String name) {
+    private static void route(String name) {
 
         int target = Math.abs(name.hashCode() % N);
-        System.out.println("Hash("+name+")%"+N+"="+target);
+        int successor = -1;
+        System.out.println("Hash(" + name + ")%" + N + "=" + target);
         InetAddress target_ip = null;
-        try {
-            InetAddress potential_target = InetAddress.getLocalHost();
-            boolean target_present = false;
 
+        int minimum = Integer.MAX_VALUE;
+        boolean target_present = false;
+        try {
+            InetAddress potential_target_ip = InetAddress.getLocalHost();
+            int potential_successor = 0;
             for (int i = 0; i < fingerTable.table.length; i++) {
 
                 synchronized (fingerTable) {
-                    if (fingerTable.table[i][1] == target) {
+                    if (fingerTable.table[i][1] - target == 0) {
                         target_ip = fingerTable.ip[i];
                         target_present = true;
+                        successor = fingerTable.table[i][2];
                     }
                 }
 
                 if (target_present) {
-                    System.out.println("Target present at "+target);
-
-                    sendFileToTarget(target_ip, name, target);
+                    System.out.println("Target present at " + successor);
+                    System.out.printf("Preparing to send filename %s to %d \n", name, successor);
+                    sendFileToTarget(target_ip, name, successor);
                     return;
                 }
 
-//                synchronized (fingerTable) {
-//
-//                    if (fingerTable.table[i][1] < target) {
-//                        potential_target = fingerTable.ip[i];
-//
-//                    }
-//                }
+                /*synchronized (fingerTable) {
 
+                    int difference = fingerTable.table[i][1] - target;
+                    if (difference < 0) difference += 16;
+
+                    if (difference < minimum) {
+                        potential_target_ip = fingerTable.ip[i];
+                        potential_successor = successor;
+                        minimum = difference;
+
+                    }
+                }*/
 
             }
-            if (!target_present) {
-                target_ip = potential_target;
-            }
 
-            // JUMP
+            /*target_ip = potential_target_ip;
+            successor = potential_successor;
+
+            System.out.printf("Rerouting filename %s to node %d at %s\n", name, successor, target_ip);*/
+
+
 
         } catch (IOException e) {
             System.out.println("Message: " + e.getMessage());
@@ -144,19 +154,20 @@ public class Node implements Runnable {
 
     }
 
-    private static void sendFileToTarget(InetAddress target_ip, String name, int target) throws IOException {
+    private static void sendFileToTarget(InetAddress target_ip, String name, int successor) throws IOException {
         // open socket, send data and return
 
         // FileContent transfer socket
-        Socket socket = new Socket(target_ip, 8000+ ID);
-        System.out.println("Connection request sent to "+ target_ip);
+        Socket socket = new Socket(target_ip, 8000 + successor);
+        System.out.println("Connection request sent to port" + (8000 + successor));
+
         // 5
         ObjectOutputStream output = new ObjectOutputStream(socket.getOutputStream());
-        FileContent fc = new FileContent(name, target);
+        FileContent fc = new FileContent(name, successor);
         output.writeObject(fc);
         output.flush();
 
-        System.out.println("FileContent sent to "+target_ip+":"+ fc.name_of_file);
+        System.out.println("FileContent sent to node " + successor + " filename: " + fc.name_of_file);
         socket.close();
 
     }
