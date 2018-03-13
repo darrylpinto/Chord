@@ -30,7 +30,7 @@ public class Node implements Runnable {
         ObjectOutputStream output = new ObjectOutputStream(soc.getOutputStream());
         ObjectInputStream input = new ObjectInputStream(soc.getInputStream());
 
-        System.out.println("Enter GUID: ");
+        System.out.println("Enter GUID:");
         String guid = sc.next();
         output.writeUTF(guid);
         output.flush();
@@ -44,9 +44,7 @@ public class Node implements Runnable {
 
         // Node thread to listen for FingerTable Updates
         new Thread(new Node()).start();
-        // NodeListener Thread
         new Thread(new NodeListener(ID)).start();
-
         new Thread(new NodeDeleter(ID)).start();
 
 
@@ -68,66 +66,76 @@ public class Node implements Runnable {
                     break;
                 case "q":
                 case "Q":
-                    System.out.println("Preparing to Stop");
-
-                    File dir = new File("" + ID);
-                    if (dir.exists()) {
-                        int nextSuccessor = fingerTable.table[0][2];
-                        InetAddress nextTarget = fingerTable.ip[0];
-                        Socket socNext = new Socket(nextTarget, 9000 + nextSuccessor);
-                        ArrayList<File> files = new ArrayList<File>(Arrays.asList(dir.listFiles()));
-
-
-                        FileReader fr = new FileReader(files.get(0));
-                        BufferedReader br = new BufferedReader(fr);
-
-                        String line;
-                        String data = "";
-                        while ((line = br.readLine()) != null) {
-                            data += line;
-                            data += "\n";
-                        }
-
-                        br.close();
-
-                        if (files.get(0).delete()) {
-                            System.out.println("File sent to "+ nextSuccessor+" and deleted locally");
-                        }
-                        ObjectOutputStream data_output = new ObjectOutputStream(socNext.getOutputStream());
-                        data_output.writeUTF(data);
-                        data_output.flush();
-
-                        socNext.close();
-
-
-                    }
-
-
-                    Socket socExit = new Socket(host, 6001);
-                    ObjectOutputStream exitOutput = new ObjectOutputStream(socExit.getOutputStream());
-                    exitOutput.writeInt(ID);
-                    exitOutput.flush();
-
-                    ObjectInputStream exitStatus = new ObjectInputStream(socExit.getInputStream());
-                    exitStatus.readUTF();
-                    System.out.println("User " + ID + " has stopped");
-                    socExit.close();
-                    System.exit(0);
-
+                    quit(host);
                     break;
+
                 case "c":
                 case "C":
                     System.out.println("Enter fileName:");
                     String name = sc.next();
-
                     route(name);
                     break;
+
                 case "r":
                 case "R":
+                    System.out.println("Enter fileName to retrieve:");
+                    String retrieve_name = sc.next();
+
+
                     break;
 
             }
         }
+    }
+
+
+    static void quit(String host) throws IOException {
+        System.out.println("Preparing to Stop");
+
+        File dir = new File("" + ID);
+        if (dir.exists()) {
+            InetAddress nextTarget;
+            int nextSuccessor;
+            synchronized (fingerTable) {
+                nextSuccessor = fingerTable.table[0][2];
+                nextTarget = fingerTable.ip[0];
+
+            }
+            Socket socNext = new Socket(nextTarget, 9000 + nextSuccessor);
+            ArrayList<File> files = new ArrayList<>(Arrays.asList(dir.listFiles()));
+
+            FileReader fr = new FileReader(files.get(0));
+            BufferedReader br = new BufferedReader(fr);
+
+            String line;
+            String data = "";
+            while ((line = br.readLine()) != null) {
+                data += line;
+                data += "\n";
+            }
+
+            br.close();
+
+            if (files.get(0).delete()) {
+                System.out.println("File sent to " + nextSuccessor + " and deleted locally");
+            }
+            ObjectOutputStream data_output = new ObjectOutputStream(socNext.getOutputStream());
+            data_output.writeUTF(data);
+            data_output.flush();
+
+            socNext.close();
+
+        }
+        Socket socExit = new Socket(host, 6001);
+        ObjectOutputStream exitOutput = new ObjectOutputStream(socExit.getOutputStream());
+        exitOutput.writeInt(ID);
+        exitOutput.flush();
+
+        ObjectInputStream exitStatus = new ObjectInputStream(socExit.getInputStream());
+        exitStatus.readUTF();
+        System.out.println("User " + ID + " has stopped");
+        socExit.close();
+        System.exit(0);
     }
 
     static void route(String name) {
@@ -154,7 +162,8 @@ public class Node implements Runnable {
 
                 if (target_present) {
                     System.out.println("Target present at " + successor);
-                    System.out.printf("Preparing to send filename %s to %d \n", name, successor);
+                    System.out.printf("Preparing to send filename %s to %d \n",
+                            name, successor);
                     sendFileToTarget(target_ip, name, target, successor, true);
                     return;
                 }
@@ -179,7 +188,8 @@ public class Node implements Runnable {
 
             target_ip = potential_target_ip;
 
-            System.out.printf("Rerouting filename %s to node %d at %s\n", name, successor, target_ip);
+            System.out.printf("Rerouting filename %s to node %d at %s\n",
+                    name, successor, target_ip);
 
             sendFileToTarget(target_ip, name, target, successor, false);
 
@@ -208,7 +218,8 @@ public class Node implements Runnable {
         output.writeBoolean(b);
         output.flush();
 
-        System.out.println("FileContent sent to node " + successor + " filename: " + fc.name_of_file);
+        System.out.println("FileContent sent to node " + successor
+                + " filename: " + fc.name_of_file);
         socket.close();
 
     }

@@ -45,14 +45,16 @@ public class NodeDeleter implements Runnable {
                     FileWriter writer = new FileWriter(file);
 
                     writer.write(data);
-                    System.out.println("Data transfer because of node quitting the network");
+                    System.out.println("Data transfer because of node " +
+                            "quitting the network");
                     System.out.println(data + "written to file");
                     writer.close();
                 } else {
 
                     FileWriter writer = new FileWriter(file, true);
                     writer.write(data);
-                    System.out.println("Data transfer because of node quitting the network");
+                    System.out.println("Data transfer because of node" +
+                            " quitting the network");
                     System.out.println(data + "appended to file");
                     writer.close();
                 }

@@ -17,7 +17,9 @@ public class FingerTable implements Serializable {
     }
 
     public FingerTable() {
-
+        this.table = null;
+        this.k = -1;
+        this.ip = null;
     }
 
     public String toString() {
