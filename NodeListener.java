@@ -49,13 +49,17 @@ public class NodeListener implements Runnable {
 
                         // csv will contain: target node, name_of_file
                         writer.write(fc.target_node + "," + fc.name_of_file + "\n");
+
                         System.out.printf("'%d,%s' written to file %s\n",
                                 fc.target_node, fc.name_of_file, file.getName());
+
                         writer.close();
                     } else {
 
                         FileWriter writer = new FileWriter(file, true);
+
                         writer.write(fc.target_node + "," + fc.name_of_file + "\n");
+
                         System.out.printf("'%d,%s' appended to file %s\n",
                                 fc.target_node, fc.name_of_file, file.getName());
 

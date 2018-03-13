@@ -6,6 +6,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -20,10 +21,13 @@ public class Server implements Runnable {
 
     private static final int serverPort = 6000;
 
-    static HashMap<Integer, Integer> nodeNeighbors = new HashMap<>();
+    static HashMap<Integer, Integer> nodeSuccessor = new HashMap<>();
     static ConcurrentHashMap<Integer, Socket> connectionMap = new ConcurrentHashMap<>();
     static ConcurrentHashMap<Integer, FingerTable> tableMap = new ConcurrentHashMap<>();
     static ConcurrentHashMap<Integer, Boolean> onlineNodes = new ConcurrentHashMap<>();
+    static ConcurrentHashMap<Integer, Integer> nodePredecessor = new ConcurrentHashMap<>();
+    private static ArrayList<Integer> range;
+
 
     public static void main(String[] args) throws UnknownHostException {
 
@@ -32,7 +36,8 @@ public class Server implements Runnable {
         new Thread(new Server()).start();
 
         for (int i = 0; i < N; i++) {
-            nodeNeighbors.put(i, (i + 1) % N);
+            nodeSuccessor.put(i, (i + 1) % N);
+            nodePredecessor.put((i + 1) % N, i);
         }
 
         ServerSocket serverSock = null;
@@ -56,7 +61,7 @@ public class Server implements Runnable {
     }
 
     private static void deleteFiles() {
-
+        // delete old files is any
         for (int i = 0; i < N; i++) {
             File file = new File(i + File.separator + "Content.csv");
             if (file.exists())
@@ -99,12 +104,12 @@ public class Server implements Runnable {
             return iter;
         } else {
 
-            iter = nodeNeighbors.get(iter % N);
+            iter = nodeSuccessor.get(iter % N);
             while (true) {
                 if (onlineNodes.containsKey(iter)) {
                     return iter;
                 }
-                iter = nodeNeighbors.get(iter);
+                iter = nodeSuccessor.get(iter);
             }
 
         }
@@ -118,9 +123,13 @@ public class Server implements Runnable {
                 try {
                     Socket socFinger = new Socket(soc.getInetAddress(), 7000 + i);
 
-                    ObjectOutputStream obj = new ObjectOutputStream(socFinger.getOutputStream());
-                    obj.writeObject(tableMap.get(i));
-                    obj.flush();
+                    ObjectOutputStream output = new ObjectOutputStream(socFinger.getOutputStream());
+                    output.writeObject(tableMap.get(i));
+                    output.flush();
+
+                    ArrayList<Integer> range = computeRange(i);
+                    output.writeObject(range);
+                    output.flush();
 
                     socFinger.close();
 
@@ -134,6 +143,26 @@ public class Server implements Runnable {
         }
 
 
+    }
+
+    private static ArrayList<Integer> computeRange(int guid) {
+        ArrayList<Integer> range =  new ArrayList<>(2);
+
+        int iter = guid;
+        int previous;
+        while(true){
+            previous = iter;
+            iter = nodePredecessor.get(iter);
+            if(onlineNodes.containsKey(iter)){
+                range.add(previous);
+                break;
+            }
+
+        }
+
+        range.add(guid);
+        System.out.println("Range for "+guid+":"+ range);
+        return range;
     }
 
     public static void exitUser() {
@@ -167,6 +196,8 @@ public class Server implements Runnable {
         }
 
     }
+
+
 
     @Override
     public void run() {

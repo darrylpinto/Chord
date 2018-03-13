@@ -30,7 +30,7 @@ class ServerRegistration implements Runnable {
 
             int guid = Integer.parseInt(_guid);
 
-            if (!Server.nodeNeighbors.containsKey(guid)) {
+            if (!Server.nodeSuccessor.containsKey(guid)) {
                 System.out.println("Invalid GUID:" + guid);
                 output.writeUTF("Q"); // Exit Condition
                 output.flush();

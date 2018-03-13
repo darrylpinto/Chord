@@ -17,6 +17,7 @@ public class Node implements Runnable {
 
     static FingerTable fingerTable = new FingerTable();
     static int guid;
+    static ArrayList<Integer> range;
 
     public static void main(String[] args) throws IOException {
 
@@ -50,6 +51,7 @@ public class Node implements Runnable {
         new Thread(new NodeRetriever(Node.guid)).start();
 
 
+
         while (true) {
             String str = "p - print FingerTable\n";
             str += "q - quit\n";
@@ -63,7 +65,7 @@ public class Node implements Runnable {
                 case "p":
                 case "P":
                     synchronized (fingerTable) {
-                        System.out.println(fingerTable); // Get latest fingerTable
+                        System.out.println(fingerTable);
                     }
                     break;
                 case "q":
@@ -376,8 +378,6 @@ public class Node implements Runnable {
             } else {
                 System.out.println("Error in DELETE");
 
-
-
             }
             ObjectOutputStream data_output = new ObjectOutputStream(socNext.getOutputStream());
             data_output.writeUTF(data);
@@ -414,6 +414,8 @@ public class Node implements Runnable {
                     fingerTable = (FingerTable) obj;
                     System.out.println(">>>Updated FingerTable");
                 }
+
+                Node.range = (ArrayList<Integer>) input.readObject();
 
             }
 
