@@ -80,11 +80,28 @@ public class Node implements Runnable {
                 case "R":
                     System.out.println("Enter fileName to retrieve:");
                     String retrieve_name = sc.next();
-
+                    retrieve(retrieve_name);
 
                     break;
 
             }
+        }
+    }
+
+    private static void retrieve(String name) {
+        int target = Math.abs(name.hashCode() % N);
+        int successor = -1;
+        System.out.println("Hash(" + name + ")%" + N + "=" + target);
+        InetAddress target_ip = null;
+
+        int minimum = Integer.MAX_VALUE;
+        boolean target_present = false;
+        try {
+            InetAddress potential_target_ip = InetAddress.getLocalHost();
+            // TO BE CONTINUED
+
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -147,11 +164,13 @@ public class Node implements Runnable {
 
         int minimum = Integer.MAX_VALUE;
         boolean target_present = false;
+        int kplus2i = -1;
         try {
             InetAddress potential_target_ip = InetAddress.getLocalHost();
 
             for (int i = 0; i < fingerTable.table.length; i++) {
 
+                // base Case
                 synchronized (fingerTable) {
                     if (target - fingerTable.table[i][1] == 0) {
                         target_ip = fingerTable.ip[i];
@@ -180,6 +199,7 @@ public class Node implements Runnable {
                         minimum = difference;
                         potential_target_ip = fingerTable.ip[i];
                         successor = fingerTable.table[i][2];
+                        kplus2i = fingerTable.table[i][1];
 
                     }
                 }
@@ -191,7 +211,15 @@ public class Node implements Runnable {
             System.out.printf("Rerouting filename %s to node %d at %s\n",
                     name, successor, target_ip);
 
-            sendFileToTarget(target_ip, name, target, successor, false);
+            if (target > kplus2i && target < successor) {
+                sendFileToTarget(target_ip, name, target, successor, true);
+            } else if (target > kplus2i && target > successor ) {
+                sendFileToTarget(target_ip, name, target, successor, true);
+            } else if (target < kplus2i && target < successor) {
+                sendFileToTarget(target_ip, name, target, successor, true);
+            } else {
+                sendFileToTarget(target_ip, name, target, successor, false);
+            }
 
 
         } catch (IOException e) {

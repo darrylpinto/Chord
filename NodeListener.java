@@ -10,7 +10,6 @@ import java.net.Socket;
  */
 public class NodeListener implements Runnable {
 
-    //static final int fileTransferPort = 8000;
     int guid;
 
     NodeListener(int guid) {
@@ -41,6 +40,7 @@ public class NodeListener implements Runnable {
                     if (dir.mkdir()) {
                         System.out.println("----New directory created:" + dir);
                     }
+
                     File file = new File("" + guid + "\\Content.csv");
 
                     if (file.createNewFile()) {
