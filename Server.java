@@ -145,24 +145,34 @@ public class Server implements Runnable {
 
     }
 
+    public static int nextNode(int guid) {
+        int iter = guid;
+        while (true) {
+            iter = nodeSuccessor.get(iter);
+            if (onlineNodes.containsKey(iter)) {
+                return iter;
+            }
+        }
+    }
+
     private static ArrayList<Integer> computeRange(int guid) {
-        ArrayList<Integer> range =  new ArrayList<>(2);
+        ArrayList<Integer> rangeList = new ArrayList<>(2);
 
         int iter = guid;
         int previous;
-        while(true){
+        while (true) {
             previous = iter;
             iter = nodePredecessor.get(iter);
-            if(onlineNodes.containsKey(iter)){
-                range.add(previous);
+            if (onlineNodes.containsKey(iter)) {
+                rangeList.add(previous);
                 break;
             }
 
         }
 
-        range.add(guid);
-        System.out.println("Range for "+guid+":"+ range);
-        return range;
+        rangeList.add(guid);
+//        System.out.println("Range for " + guid + ":" + rangeList);
+        return rangeList;
     }
 
     public static void exitUser() {
@@ -196,7 +206,6 @@ public class Server implements Runnable {
         }
 
     }
-
 
 
     @Override

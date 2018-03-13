@@ -12,20 +12,20 @@ import java.util.Scanner;
  * Created by Darryl Pinto on 3/08/2018.
  */
 public class Node implements Runnable {
-    private static final int n = 4;
-    private static final int N = (int) Math.pow(2, n);
-
+    public final static Object object = new Object();
+    static final int n = 4;
+    static final int N = (int) Math.pow(2, n);
     static FingerTable fingerTable = new FingerTable();
     static int guid;
-    static ArrayList<Integer> range;
+    static ArrayList<Integer> range = new ArrayList<>();
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
 
         String host;
         Scanner sc = new Scanner(System.in);
         System.out.println("Enter Server IP");
         host = sc.next();
-
+        ArrayList temp = Node.range;
         Socket soc = new Socket(host, 6000);
 
         // 1
@@ -46,10 +46,64 @@ public class Node implements Runnable {
 
         // Node thread to listen for FingerTable Updates
         new Thread(new Node()).start();
-        new Thread(new NodeListener(Node.guid)).start();
+        new Thread(new FileTransferHandler(Node.guid)).start();
         new Thread(new QuitHandler(Node.guid)).start();
         new Thread(new NodeRetriever(Node.guid)).start();
+        new Thread(new NewNodeTransferHandler(Node.guid)).start();
 
+
+        int successor = input.readInt();
+        InetAddress successorIP = (InetAddress) input.readObject();
+
+        Socket socNext = new Socket(successorIP, 6500 + successor);
+        ObjectOutputStream outputNext = new ObjectOutputStream(socNext.getOutputStream());
+        ObjectInputStream inputNext = new ObjectInputStream(socNext.getInputStream());
+
+
+        synchronized (object) {
+            object.wait();
+            outputNext.writeObject(Node.range);
+            outputNext.flush();
+
+        }
+
+        boolean dataTransferStatus = inputNext.readBoolean();
+
+        if (dataTransferStatus) {
+            String dataReceived = inputNext.readUTF();
+
+            File dir = new File("" + guid);
+            if (dir.mkdir()) {
+                System.out.println("----New directory created:" + dir);
+            }
+
+            File file = new File("" + guid + File.separator + "Content.csv");
+
+            if (file.createNewFile()) {
+
+                FileWriter writer = new FileWriter(file);
+
+                // csv will contain: target node, name_of_file
+                writer.write(dataReceived);
+                writer.flush();
+
+                System.out.println(dataReceived + "written to the file");
+                writer.close();
+            } else {
+
+                FileWriter writer = new FileWriter(file, true);
+                writer.write(dataReceived);
+                writer.flush();
+
+                System.out.println(dataReceived + "appended to the file");
+                writer.close();
+            }
+
+
+        } else {
+            System.out.println("No data found at " + successor);
+            System.out.println("Transfer completed");
+        }
 
 
         while (true) {
@@ -105,7 +159,7 @@ public class Node implements Runnable {
             if (!dir.exists()) {
                 return false;
             } else {
-                File file = new File("" + guid + File.separator+"Content.csv");
+                File file = new File("" + guid + File.separator + "Content.csv");
                 if (!file.exists()) {
                     return false;
                 } else {
@@ -226,7 +280,7 @@ public class Node implements Runnable {
                 System.out.println("----New directory created:" + dir);
             }
 
-            File file = new File("" + guid + File.separator+ "Content.csv");
+            File file = new File("" + guid + File.separator + "Content.csv");
 
             if (file.createNewFile()) {
 
@@ -234,6 +288,7 @@ public class Node implements Runnable {
 
                 // csv will contain: target node, name_of_file
                 writer.write(target + "," + name + "\n");
+                writer.flush();
                 System.out.printf("'%d,%s' written to file %s\n",
                         target, name, file.getName());
                 writer.close();
@@ -241,6 +296,8 @@ public class Node implements Runnable {
 
                 FileWriter writer = new FileWriter(file, true);
                 writer.write(target + "," + name + "\n");
+                writer.flush();
+
                 System.out.printf("'%d,%s' appended to file %s\n",
                         target, name, file.getName());
                 writer.close();
@@ -372,9 +429,8 @@ public class Node implements Runnable {
             br.close();
             fr.close();
 
-//            if (files.get(0).delete()) {
-            if(Files.deleteIfExists(files.get(0).toPath())){
-                System.out.println("Data in "+files.get(0) + " sent to " + nextSuccessor + " and deleted locally");
+            if (Files.deleteIfExists(files.get(0).toPath())) {
+                System.out.println("Data in " + files.get(0) + " sent to " + nextSuccessor + " and deleted locally");
             } else {
                 System.out.println("Error in DELETE");
 
@@ -405,6 +461,7 @@ public class Node implements Runnable {
             ServerSocket serverSoc = new ServerSocket(7000 + guid);
 
             while (true) {
+                ArrayList temp = Node.range;
 
                 Socket socket = serverSoc.accept();
                 ObjectInputStream input = new ObjectInputStream(socket.getInputStream());
@@ -415,8 +472,12 @@ public class Node implements Runnable {
                     System.out.println(">>>Updated FingerTable");
                 }
 
-                Node.range = (ArrayList<Integer>) input.readObject();
+                synchronized (object) {
+                    Node.range = (ArrayList<Integer>) input.readObject();
+                    object.notify();
+                }
 
+                socket.close();
             }
 
         } catch (IOException | ClassNotFoundException e) {
@@ -427,6 +488,7 @@ public class Node implements Runnable {
 
     @Override
     public void run() {
+
         fingerTableUpdate();
     }
 }

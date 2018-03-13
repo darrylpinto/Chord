@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.InetAddress;
 import java.net.Socket;
 
 /**
@@ -44,6 +45,16 @@ class ServerRegistration implements Runnable {
                 Server.onlineNodes.put(guid, true);
                 Server.computeTables();
                 Server.sendTables();
+
+                int next = Server.nextNode(guid);
+//                System.out.println("Successor to " + guid + ": " + next);
+                output.writeInt(next);
+                output.flush();
+
+                InetAddress nextIP = Server.connectionMap.get(next).getInetAddress();
+                output.writeObject(nextIP);
+                output.flush();
+
 
             }
 
