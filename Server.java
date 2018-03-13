@@ -25,7 +25,7 @@ public class Server implements Runnable {
     static ConcurrentHashMap<Integer, Boolean> onlineNodes = new ConcurrentHashMap<>();
 
     public static void main(String[] args) throws UnknownHostException {
-        System.out.println("Server IP:"+ InetAddress.getLocalHost());
+        System.out.println("Server IP:" + InetAddress.getLocalHost());
         new Thread(new Server()).start();
 
         for (int i = 0; i < N; i++) {

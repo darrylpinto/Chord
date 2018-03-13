@@ -19,8 +19,7 @@ public class Node implements Runnable {
 
     public static void main(String[] args) throws IOException {
 
-        //Server IP
-        String host = "LocalHost";
+        String host;
         Scanner sc = new Scanner(System.in);
         System.out.println("Enter Server IP");
         host = sc.next();
@@ -96,7 +95,7 @@ public class Node implements Runnable {
         }
     }
 
-    private static void route(String name) {
+     static void route(String name) {
 
         int target = Math.abs(name.hashCode() % N);
         int successor = -1;
@@ -107,11 +106,11 @@ public class Node implements Runnable {
         boolean target_present = false;
         try {
             InetAddress potential_target_ip = InetAddress.getLocalHost();
-            int potential_successor = 0;
+
             for (int i = 0; i < fingerTable.table.length; i++) {
 
                 synchronized (fingerTable) {
-                    if (fingerTable.table[i][1] - target == 0) {
+                    if (target - fingerTable.table[i][1] == 0) {
                         target_ip = fingerTable.ip[i];
                         target_present = true;
                         successor = fingerTable.table[i][2];
@@ -121,30 +120,33 @@ public class Node implements Runnable {
                 if (target_present) {
                     System.out.println("Target present at " + successor);
                     System.out.printf("Preparing to send filename %s to %d \n", name, successor);
-                    sendFileToTarget(target_ip, name, successor);
+                    sendFileToTarget(target_ip, name, successor,true);
                     return;
                 }
 
-                /*synchronized (fingerTable) {
+                synchronized (fingerTable) {
 
-                    int difference = fingerTable.table[i][1] - target;
-                    if (difference < 0) difference += 16;
+                    int difference = target - fingerTable.table[i][1] ;
+
+                    if (difference < 0){
+                        difference += 16;
+                    }
 
                     if (difference < minimum) {
-                        potential_target_ip = fingerTable.ip[i];
-                        potential_successor = successor;
                         minimum = difference;
+                        potential_target_ip = fingerTable.ip[i];
+                        successor = fingerTable.table[i][2];
 
                     }
-                }*/
+                }
 
             }
 
-            /*target_ip = potential_target_ip;
-            successor = potential_successor;
+            target_ip = potential_target_ip;
 
-            System.out.printf("Rerouting filename %s to node %d at %s\n", name, successor, target_ip);*/
+            System.out.printf("Rerouting filename %s to node %d at %s\n", name, successor, target_ip);
 
+            sendFileToTarget(target_ip, name, successor,false);
 
 
         } catch (IOException e) {
@@ -154,7 +156,7 @@ public class Node implements Runnable {
 
     }
 
-    private static void sendFileToTarget(InetAddress target_ip, String name, int successor) throws IOException {
+    private static void sendFileToTarget(InetAddress target_ip, String name, int successor, boolean b) throws IOException {
         // open socket, send data and return
 
         // FileContent transfer socket
@@ -165,6 +167,9 @@ public class Node implements Runnable {
         ObjectOutputStream output = new ObjectOutputStream(socket.getOutputStream());
         FileContent fc = new FileContent(name, successor);
         output.writeObject(fc);
+        output.flush();
+
+        output.writeBoolean(b);
         output.flush();
 
         System.out.println("FileContent sent to node " + successor + " filename: " + fc.name_of_file);
