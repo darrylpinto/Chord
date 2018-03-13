@@ -41,7 +41,7 @@ public class NodeListener implements Runnable {
                         System.out.println("----New directory created:" + dir);
                     }
 
-                    File file = new File("" + guid + "\\Content.csv");
+                    File file = new File("" + guid + File.separator + "Content.csv");
 
                     if (file.createNewFile()) {
 

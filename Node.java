@@ -2,6 +2,7 @@ import java.io.*;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
@@ -102,7 +103,7 @@ public class Node implements Runnable {
             if (!dir.exists()) {
                 return false;
             } else {
-                File file = new File("" + guid + "\\Content.csv");
+                File file = new File("" + guid + File.separator+"Content.csv");
                 if (!file.exists()) {
                     return false;
                 } else {
@@ -223,7 +224,7 @@ public class Node implements Runnable {
                 System.out.println("----New directory created:" + dir);
             }
 
-            File file = new File("" + guid + "\\Content.csv");
+            File file = new File("" + guid + File.separator+ "Content.csv");
 
             if (file.createNewFile()) {
 
@@ -369,10 +370,14 @@ public class Node implements Runnable {
             br.close();
             fr.close();
 
-            if (files.get(0).delete()) {
-                System.out.println(files.get(0) + "content sent to " + nextSuccessor + " and deleted locally");
+//            if (files.get(0).delete()) {
+            if(Files.deleteIfExists(files.get(0).toPath())){
+                System.out.println("Data in "+files.get(0) + " sent to " + nextSuccessor + " and deleted locally");
             } else {
                 System.out.println("Error in DELETE");
+
+
+
             }
             ObjectOutputStream data_output = new ObjectOutputStream(socNext.getOutputStream());
             data_output.writeUTF(data);

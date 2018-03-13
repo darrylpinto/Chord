@@ -58,7 +58,7 @@ public class Server implements Runnable {
     private static void deleteFiles() {
 
         for (int i = 0; i < N; i++) {
-            File file = new File(i + "\\Content.csv");
+            File file = new File(i + File.separator + "Content.csv");
             if (file.exists())
                 file.delete();
 

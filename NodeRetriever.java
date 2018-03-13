@@ -40,7 +40,7 @@ public class NodeRetriever implements Runnable {
                         output.flush();
 
                     } else {
-                        File file = new File("" + guid + "\\Content.csv");
+                        File file = new File("" + guid + File.separator + "Content.csv");
                         if (!file.exists()) {
                             output.writeBoolean(false);
                             output.flush();
