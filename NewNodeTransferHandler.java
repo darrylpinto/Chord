@@ -35,9 +35,7 @@ public class NewNodeTransferHandler implements Runnable {
                 ObjectOutputStream output = new ObjectOutputStream(socket.getOutputStream());
 
                 ArrayList<Integer> remoteRange = (ArrayList<Integer>) input.readObject();
-                System.out.println("Received REMOTE RANGE:"+remoteRange);
                 ArrayList<Integer> localRange = Node.range;
-                System.out.println("LOCAL RANGE:"+localRange);
 
                 if (!dir.exists()) {
                     System.out.println("No data present at node " + guid);

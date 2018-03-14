@@ -25,7 +25,6 @@ public class Node implements Runnable {
         Scanner sc = new Scanner(System.in);
         System.out.println("Enter Server IP");
         host = sc.next();
-        ArrayList temp = Node.range;
         Socket soc = new Socket(host, 6000);
 
         // 1
@@ -461,8 +460,6 @@ public class Node implements Runnable {
             ServerSocket serverSoc = new ServerSocket(7000 + guid);
 
             while (true) {
-                ArrayList temp = Node.range;
-
                 Socket socket = serverSoc.accept();
                 ObjectInputStream input = new ObjectInputStream(socket.getInputStream());
                 Object obj = input.readObject();

@@ -51,6 +51,7 @@ public class Server implements Runnable {
         while (true) {
             Socket soc = null;
             try {
+
                 soc = serverSock.accept();
                 new Thread(new ServerRegistration(soc)).start();
 
