@@ -119,7 +119,7 @@ public class Server implements Runnable {
             if (onlineNodes.containsKey(i) && onlineNodes.get(i)) {
                 Socket soc = connectionMap.get(i);
                 try {
-                    System.out.println("Sending table to " + soc);
+                    // System.out.println("Sending table to " + soc);
                     Socket socFinger = new Socket(soc.getInetAddress(), 7000 + i);
 
                     ObjectOutputStream output = new ObjectOutputStream(socFinger.getOutputStream());
@@ -134,20 +134,8 @@ public class Server implements Runnable {
 
 
                 } catch (ConnectException e) {
-                    System.out.println("Re-attempt");
+	              // System.out.println("Re-attempt");
                     i--;
-//                    System.out.println("Sending table Again to " + soc);
-//                    Socket socFinger = new Socket(soc.getInetAddress(), 7000 + i);
-//
-//                    ObjectOutputStream output = new ObjectOutputStream(socFinger.getOutputStream());
-//                    output.writeObject(tableMap.get(i));
-//                    output.flush();
-//
-//                    ArrayList<Integer> range = computeRange(i);
-//                    output.writeObject(range);
-//                    output.flush();
-//
-//                    socFinger.close();
 
                 }
 

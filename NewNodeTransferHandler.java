@@ -80,7 +80,7 @@ public class NewNodeTransferHandler implements Runnable {
                             } else if (remoteHS.contains(Integer.parseInt(values[0]))) {
                                 dataToSend += line + "\n";
                             } else {
-                                System.out.println("Ideally SHOULD NOT COME HERE");
+                                System.out.println("Ideally SHOULD NOT COME HERE:"+ values[0]+","+values[1]);
                             }
 
                         }
