@@ -10,13 +10,13 @@ public class FingerTable implements Serializable {
     InetAddress[] ip;
     int k;
 
-    public FingerTable(int k, int[][] table, InetAddress[] ip) {
+    FingerTable(int k, int[][] table, InetAddress[] ip) {
         this.k = k;
         this.table = table;
         this.ip = ip;
     }
 
-    public FingerTable() {
+    FingerTable() {
         this.table = null;
         this.k = -1;
         this.ip = null;
@@ -24,20 +24,20 @@ public class FingerTable implements Serializable {
 
     public String toString() {
 
-        String str = "k = " + this.k;
+        StringBuilder str = new StringBuilder("k = " + this.k);
 
-        str += "\ni\t\tk+2^i\t\tsuccessor\n";
+        str.append("\ni\t\tk+2^i\t\tsuccessor\n");
 
 
         for (int[] row : table) {
             for (int a : row) {
-                str += a + "\t\t\t";
+                str.append(a).append("\t\t\t");
 
             }
-            str += "\n";
+            str.append("\n");
         }
 
-        return str;
+        return str.toString();
     }
 
 }

@@ -32,10 +32,12 @@ class ServerRegistration implements Runnable {
             int guid = Integer.parseInt(_guid);
 
             if (!Server.nodeSuccessor.containsKey(guid)) {
+
                 System.out.println("Invalid GUID:" + guid);
                 output.writeUTF("Q"); // Exit Condition
                 output.flush();
                 socket.close();
+
             } else {
 
                 System.out.println("Node connected:" + guid);
@@ -47,7 +49,6 @@ class ServerRegistration implements Runnable {
                 Server.sendTables();
 
                 int next = Server.nextNode(guid);
-//                System.out.println("Successor to " + guid + ": " + next);
                 output.writeInt(next);
                 output.flush();
 
@@ -62,6 +63,7 @@ class ServerRegistration implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         } catch (NumberFormatException e) {
+
             System.out.println("Invalid GUID:" + _guid);
             try {
                 output.writeUTF("Q");

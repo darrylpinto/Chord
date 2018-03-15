@@ -11,7 +11,7 @@ public class NewNodeTransferHandler implements Runnable {
 
     int guid;
 
-    public NewNodeTransferHandler(int guid) {
+    NewNodeTransferHandler(int guid) {
         this.guid = guid;
     }
 
@@ -35,52 +35,43 @@ public class NewNodeTransferHandler implements Runnable {
                 ObjectOutputStream output = new ObjectOutputStream(socket.getOutputStream());
 
                 ArrayList<Integer> remoteRange = (ArrayList<Integer>) input.readObject();
-                ArrayList<Integer> localRange = Node.range;
+                Thread.sleep(1000);
 
                 if (!dir.exists()) {
-                    System.out.println("No data present at node " + guid);
+
                     output.writeBoolean(false);
                     output.flush();
                 } else if (!file.exists()) {
-                    System.out.println("No data present at node " + guid);
+
                     output.writeBoolean(false);
                     output.flush();
-
                 } else {
+
                     output.writeBoolean(true);
                     output.flush();
 
                     HashSet<Integer> remoteHS = new HashSet<>();
-                    HashSet<Integer> localHS = new HashSet<>();
 
                     for (int i = remoteRange.get(0); i <= remoteRange.get(1); i++) {
                         remoteHS.add(i % Node.N);
                     }
 
-                    for (int i = localRange.get(0); i <= localRange.get(1); i++) {
-                        localHS.add(i % Node.N);
-                    }
 
                     FileReader fr = new FileReader(file);
                     BufferedReader br = new BufferedReader(fr);
                     String line;
-                    String dataToSend = "";
-                    String dataToKeep = "";
+                    StringBuilder dataToSend = new StringBuilder();
+                    StringBuilder dataToKeep = new StringBuilder();
 
                     while ((line = br.readLine()) != null) {
 
-                        if (line.equals("\n")) {
-
-                        }
-                        else {
+                        if (!line.equals("\n")) {
                             String[] values = line.trim().split(",");
-                            if (localHS.contains(Integer.parseInt(values[0]))) {
-                                dataToKeep += line + "\n";
-
-                            } else if (remoteHS.contains(Integer.parseInt(values[0]))) {
-                                dataToSend += line + "\n";
+                            if (remoteHS.contains(Integer.parseInt(values[0]))) {
+                                dataToSend.append(line).append("\n");
                             } else {
-                                System.out.println("Ideally SHOULD NOT COME HERE:"+ values[0]+","+values[1]);
+                                dataToKeep.append(line).append("\n");
+
                             }
 
                         }
@@ -90,16 +81,15 @@ public class NewNodeTransferHandler implements Runnable {
                     fr.close();
 
                     FileWriter writer = new FileWriter(file);
-                    writer.write(dataToKeep);
+                    writer.write(dataToKeep.toString());
                     writer.flush();
 
-                    System.out.println(dataToKeep + "written to file");
+                    System.out.println("Data transfer because of node added to the network");
+                    System.out.println("Data written to local file:\n----\n" + dataToKeep + "----");
                     writer.close();
+                    System.out.println("Data sent to newly added node:\n----\n" + dataToSend + "----");
 
-                    System.out.println("Data transfer because of node " +
-                            "added to the network");
-                    System.out.println(dataToSend + " sent to newly added node");
-                    output.writeUTF(dataToSend);
+                    output.writeUTF(dataToSend.toString());
                     output.flush();
 
                     socket.close();
@@ -109,7 +99,7 @@ public class NewNodeTransferHandler implements Runnable {
             }
 
 
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (IOException | ClassNotFoundException | InterruptedException e) {
             e.printStackTrace();
         }
 

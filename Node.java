@@ -23,9 +23,8 @@ public class Node implements Runnable {
 
         String host;
         Scanner sc = new Scanner(System.in);
-//        host = sc.next();
         host = args[0];
-        System.out.println("Server IP: "+ host);
+        System.out.println("Server IP: " + host);
         Socket soc = new Socket(host, 6000);
 
         // 1
@@ -51,7 +50,6 @@ public class Node implements Runnable {
         new Thread(new NodeRetriever(Node.guid)).start();
         new Thread(new NewNodeTransferHandler(Node.guid)).start();
 
-
         int successor = input.readInt();
         InetAddress successorIP = (InetAddress) input.readObject();
 
@@ -59,11 +57,8 @@ public class Node implements Runnable {
         ObjectOutputStream outputNext = new ObjectOutputStream(socNext.getOutputStream());
         ObjectInputStream inputNext = new ObjectInputStream(socNext.getInputStream());
 
-
         synchronized (object) {
-//            System.out.println("waiting");
             object.wait();
-//            System.out.println("done waiting");
             outputNext.writeObject(Node.range);
             outputNext.flush();
 
@@ -75,9 +70,7 @@ public class Node implements Runnable {
             String dataReceived = inputNext.readUTF();
 
             File dir = new File("" + guid);
-            if (dir.mkdir()) {
-//                System.out.println("----New directory created:" + dir);
-            }
+            dir.mkdir();
 
             File file = new File("" + guid + File.separator + "Content.csv");
 
@@ -89,7 +82,8 @@ public class Node implements Runnable {
                 writer.write(dataReceived);
                 writer.flush();
 
-                System.out.println(dataReceived + "written to the file");
+                System.out.println("Data Received:\n---\n" + dataReceived + "---");
+
                 writer.close();
             } else {
 
@@ -99,6 +93,8 @@ public class Node implements Runnable {
 
                 System.out.println(dataReceived + "appended to the file");
                 writer.close();
+                System.out.println("Transfer completed");
+
             }
 
 
@@ -112,7 +108,8 @@ public class Node implements Runnable {
             String str = "p - print FingerTable\n";
             str += "q - quit\n";
             str += "c - create File\n";
-            str += "r - Retrieve File";
+            str += "r - Retrieve File\n";
+            str += "o - Open Contents on Node";
 
             System.out.println(str);
             String choice = sc.next();
@@ -145,9 +142,40 @@ public class Node implements Runnable {
                     } else
                         System.out.println(retrieve_name + " NOT present in DHT Chord");
 
-
                     break;
 
+                case "o":
+                case "O":
+                    getContentsFromNode();
+                    break;
+
+            }
+        }
+    }
+
+    private static void getContentsFromNode() throws IOException {
+
+        File dir = new File("" + guid);
+        if (!dir.exists()) {
+
+            System.out.println("No data on the node");
+        } else {
+
+            File file = new File("" + guid + File.separator + "Content.csv");
+
+            if (!file.exists()) {
+                System.out.println("No data on the node");
+            } else {
+
+                FileReader fr = new FileReader(file);
+                BufferedReader br = new BufferedReader(fr);
+                StringBuilder data = new StringBuilder();
+                String line;
+                while ((line = br.readLine()) != null) {
+                    data.append(line).append("\n");
+                }
+
+                System.out.println("Data on Node " + guid + ":\n---\n" + data + "---");
             }
         }
     }
@@ -161,6 +189,7 @@ public class Node implements Runnable {
             if (!dir.exists()) {
                 return false;
             } else {
+
                 File file = new File("" + guid + File.separator + "Content.csv");
                 if (!file.exists()) {
                     return false;
@@ -196,6 +225,7 @@ public class Node implements Runnable {
                 // base Case
                 synchronized (fingerTable) {
                     if (target - fingerTable.table[i][1] == 0) {
+
                         target_ip = fingerTable.ip[i];
                         target_present = true;
                         successor = fingerTable.table[i][2];
@@ -216,6 +246,7 @@ public class Node implements Runnable {
                     }
 
                     if (difference < minimum) {
+
                         minimum = difference;
                         potential_target_ip = fingerTable.ip[i];
                         successor = fingerTable.table[i][2];
@@ -233,11 +264,7 @@ public class Node implements Runnable {
 
             if (target > kplus2i && target < successor) {
                 return toRetrieve(target_ip, name, successor, true);
-            } /*else if (target > kplus2i && target > successor) {
-                return toRetrieve(target_ip, name, successor, true);
-            } else if (target < kplus2i && target < successor) {
-                return toRetrieve(target_ip, name, successor, true);
-            }*/ else {
+            } else {
                 return toRetrieve(target_ip, name, successor, false);
             }
 
@@ -253,7 +280,6 @@ public class Node implements Runnable {
                                       int successor, boolean b) throws IOException {
 
         Socket socket = new Socket(target_ip, 10000 + successor);
-        System.out.println("Connection request sent to port " + (10000 + successor));
 
         ObjectOutputStream output = new ObjectOutputStream(socket.getOutputStream());
         output.writeUTF(name);
@@ -261,7 +287,6 @@ public class Node implements Runnable {
 
         output.writeBoolean(b);
         output.flush();
-
 
         ObjectInputStream input = new ObjectInputStream(socket.getInputStream());
         boolean result = input.readBoolean();
@@ -278,9 +303,7 @@ public class Node implements Runnable {
         int target = Math.abs(name.hashCode() % N);
         if (target == guid) {
             File dir = new File("" + guid);
-            if (dir.mkdir()) {
-//                System.out.println("----New directory created:" + dir);
-            }
+            dir.mkdir();
 
             File file = new File("" + guid + File.separator + "Content.csv");
 
@@ -323,6 +346,7 @@ public class Node implements Runnable {
 
                 // base Case
                 synchronized (fingerTable) {
+
                     if (target - fingerTable.table[i][1] == 0) {
                         target_ip = fingerTable.ip[i];
                         target_present = true;
@@ -331,6 +355,7 @@ public class Node implements Runnable {
                 }
 
                 if (target_present) {
+
                     System.out.println("Target present at " + successor);
                     System.out.printf("Preparing to send filename %s to %d \n",
                             name, successor);
@@ -364,11 +389,7 @@ public class Node implements Runnable {
 
             if (target > kplus2i && target < successor) {
                 sendFileToTarget(target_ip, name, target, successor, true);
-            } /*else if (target > kplus2i && target > successor) {
-                sendFileToTarget(target_ip, name, target, successor, true);
-            } else if (target < kplus2i && target < successor) {
-                sendFileToTarget(target_ip, name, target, successor, true);
-            }*/ else {
+            } else {
                 sendFileToTarget(target_ip, name, target, successor, false);
             }
 
@@ -386,7 +407,6 @@ public class Node implements Runnable {
 
         // FileContent transfer socket
         Socket socket = new Socket(target_ip, 8000 + successor);
-        System.out.println("Connection request sent to port " + (8000 + successor));
 
         // 5
         ObjectOutputStream output = new ObjectOutputStream(socket.getOutputStream());
@@ -444,7 +464,7 @@ public class Node implements Runnable {
             socNext.close();
 
         }
-        Socket socExit = new Socket(host,6001);
+        Socket socExit = new Socket(host, 6001);
         ObjectOutputStream exitOutput = new ObjectOutputStream(socExit.getOutputStream());
         exitOutput.writeInt(guid);
         exitOutput.flush();
@@ -461,7 +481,7 @@ public class Node implements Runnable {
 
         try {
             ServerSocket serverSoc = new ServerSocket(7000 + guid);
-//            System.out.println("Over here waiting for Figure table update");
+
             while (true) {
                 Socket socket = serverSoc.accept();
                 ObjectInputStream input = new ObjectInputStream(socket.getInputStream());
@@ -472,14 +492,12 @@ public class Node implements Runnable {
                     System.out.println(">>>Updated FingerTable");
                 }
 
-//                System.out.println("Sleeping");
                 Thread.sleep(500);
-//                System.out.println("Done Sleeping");
 
                 synchronized (object) {
+
                     Node.range = (ArrayList<Integer>) input.readObject();
                     object.notify();
-//                    System.out.println("NOTIFIED");
                 }
 
                 socket.close();
@@ -493,7 +511,6 @@ public class Node implements Runnable {
 
     @Override
     public void run() {
-//        System.out.println("Node thread started");
         fingerTableUpdate();
     }
 }

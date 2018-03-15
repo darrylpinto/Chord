@@ -34,9 +34,7 @@ public class QuitHandler implements Runnable {
                 String data = data_input.readUTF();
 
                 File dir = new File("" + guid);
-                if (dir.mkdir()) {
-//                    System.out.println("----New directory created:" + dir);
-                }
+                dir.mkdir();
                 File file = new File("" + guid + File.separator + "Content.csv");
 
                 if (file.createNewFile()) {
@@ -45,10 +43,12 @@ public class QuitHandler implements Runnable {
 
                     writer.write(data);
                     writer.flush();
+
                     System.out.println("Data transfer because of node " +
                             "quitting the network");
                     System.out.println(data + "written to file");
                     writer.close();
+
                 } else {
 
                     FileWriter writer = new FileWriter(file, true);
@@ -60,8 +60,6 @@ public class QuitHandler implements Runnable {
                     System.out.println(data + "appended to file");
                     writer.close();
                 }
-
-
             }
 
 

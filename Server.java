@@ -33,12 +33,14 @@ public class Server implements Runnable {
         new Thread(new Server()).start();
 
         for (int i = 0; i < N; i++) {
+
             nodeSuccessor.put(i, (i + 1) % N);
             nodePredecessor.put((i + 1) % N, i);
         }
 
         ServerSocket serverSock = null;
         try {
+
             System.out.println("Starting Server");
             serverSock = new ServerSocket(serverPort);
         } catch (IOException e) {
@@ -46,6 +48,7 @@ public class Server implements Runnable {
         }
 
         while (true) {
+
             Socket soc = null;
             try {
 
@@ -59,11 +62,26 @@ public class Server implements Runnable {
     }
 
     private static void deleteFiles() {
-        // delete old files is any
+        // delete old files if any ( Used for testing on local machine)
         for (int i = 0; i < N; i++) {
+
             File file = new File(i + File.separator + "Content.csv");
-            if (file.exists())
-                file.delete();
+
+            if (file.exists() && file.delete()) {
+
+                System.out.println(file + " deleted");
+                File dir = new File("" + i);
+
+                if (dir.delete())
+                    System.out.println(dir + " deleted");
+
+            } else {
+
+                File dir = new File("" + i);
+                if (dir.exists() && dir.delete())
+                    System.out.println(dir + " deleted");
+
+            }
 
         }
     }
@@ -96,6 +114,7 @@ public class Server implements Runnable {
     }
 
     private static int findSuccessor(int no) {
+
         int iter = no;
 
         if (onlineNodes.containsKey(iter)) {
@@ -119,7 +138,6 @@ public class Server implements Runnable {
             if (onlineNodes.containsKey(i) && onlineNodes.get(i)) {
                 Socket soc = connectionMap.get(i);
                 try {
-                    // System.out.println("Sending table to " + soc);
                     Socket socFinger = new Socket(soc.getInetAddress(), 7000 + i);
 
                     ObjectOutputStream output = new ObjectOutputStream(socFinger.getOutputStream());
@@ -134,7 +152,6 @@ public class Server implements Runnable {
 
 
                 } catch (ConnectException e) {
-	              // System.out.println("Re-attempt");
                     i--;
 
                 }
@@ -172,7 +189,6 @@ public class Server implements Runnable {
         }
 
         rangeList.add(guid);
-//        System.out.println("Range for " + guid + ":" + rangeList);
         return rangeList;
     }
 

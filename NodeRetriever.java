@@ -40,18 +40,23 @@ public class NodeRetriever implements Runnable {
                         output.flush();
 
                     } else {
+
                         File file = new File("" + guid + File.separator + "Content.csv");
+
                         if (!file.exists()) {
                             output.writeBoolean(false);
                             output.flush();
 
                         } else {
+
                             FileReader fr = new FileReader(file);
                             BufferedReader br = new BufferedReader(fr);
                             String line;
                             boolean flag = false;
+
                             while ((line = br.readLine()) != null) {
                                 String[] values = line.trim().split(",");
+
                                 if (values[1].equals(name)) {
                                     output.writeBoolean(true);
                                     output.flush();
@@ -59,7 +64,9 @@ public class NodeRetriever implements Runnable {
                                     break;
 
                                 }
+
                             }
+
                             if (flag)
                                 continue;
 
@@ -70,6 +77,7 @@ public class NodeRetriever implements Runnable {
                         }
                     }
                 } else {
+
                     boolean result = Node.retrieve(name);
                     output.writeBoolean(result);
                     output.flush();

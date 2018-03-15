@@ -25,11 +25,13 @@ public class FileTransferHandler implements Runnable {
 
         try {
             ServerSocket serverSocket = new ServerSocket(8000 + guid);
+
             while (true) {
                 Socket socket = serverSocket.accept();
 
                 //5
                 ObjectInputStream input = new ObjectInputStream(socket.getInputStream());
+
                 FileContent fc = (FileContent) input.readObject();
                 System.out.println("->FileContent received:" + fc.name_of_file);
 
@@ -37,9 +39,7 @@ public class FileTransferHandler implements Runnable {
 
                 if (target) {
                     File dir = new File("" + guid);
-                    if (dir.mkdir()) {
-//                        System.out.println("----New directory created:" + dir);
-                    }
+                    dir.mkdir();
 
                     File file = new File("" + guid + File.separator + "Content.csv");
 
