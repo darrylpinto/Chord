@@ -55,6 +55,7 @@ class ServerRegistration implements Runnable {
                 output.writeObject(nextIP);
                 output.flush();
 
+                this.socket.close();
 
             }
 

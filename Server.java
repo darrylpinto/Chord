@@ -2,10 +2,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -116,12 +113,13 @@ public class Server implements Runnable {
         }
     }
 
-    public static void sendTables() {
+    public static void sendTables() throws IOException {
 
         for (int i = 0; i < N; i++) {
             if (onlineNodes.containsKey(i) && onlineNodes.get(i)) {
                 Socket soc = connectionMap.get(i);
                 try {
+                    System.out.println("Sending table to " + soc);
                     Socket socFinger = new Socket(soc.getInetAddress(), 7000 + i);
 
                     ObjectOutputStream output = new ObjectOutputStream(socFinger.getOutputStream());
@@ -135,8 +133,22 @@ public class Server implements Runnable {
                     socFinger.close();
 
 
-                } catch (IOException e) {
-                    e.printStackTrace();
+                } catch (ConnectException e) {
+                    System.out.println("Re-attempt");
+                    i--;
+//                    System.out.println("Sending table Again to " + soc);
+//                    Socket socFinger = new Socket(soc.getInetAddress(), 7000 + i);
+//
+//                    ObjectOutputStream output = new ObjectOutputStream(socFinger.getOutputStream());
+//                    output.writeObject(tableMap.get(i));
+//                    output.flush();
+//
+//                    ArrayList<Integer> range = computeRange(i);
+//                    output.writeObject(range);
+//                    output.flush();
+//
+//                    socFinger.close();
+
                 }
 
             }
@@ -199,6 +211,8 @@ public class Server implements Runnable {
                 exitStatus.writeUTF("EXIT");
                 exitStatus.flush();
                 System.out.println("User left:" + userToExit);
+
+                socket.close();
 
             }
 

@@ -23,8 +23,9 @@ public class Node implements Runnable {
 
         String host;
         Scanner sc = new Scanner(System.in);
-        System.out.println("Enter Server IP");
-        host = sc.next();
+//        host = sc.next();
+        host = args[0];
+        System.out.println("Server IP: "+ host);
         Socket soc = new Socket(host, 6000);
 
         // 1
@@ -60,7 +61,9 @@ public class Node implements Runnable {
 
 
         synchronized (object) {
+//            System.out.println("waiting");
             object.wait();
+//            System.out.println("done waiting");
             outputNext.writeObject(Node.range);
             outputNext.flush();
 
@@ -73,7 +76,7 @@ public class Node implements Runnable {
 
             File dir = new File("" + guid);
             if (dir.mkdir()) {
-                System.out.println("----New directory created:" + dir);
+//                System.out.println("----New directory created:" + dir);
             }
 
             File file = new File("" + guid + File.separator + "Content.csv");
@@ -276,7 +279,7 @@ public class Node implements Runnable {
         if (target == guid) {
             File dir = new File("" + guid);
             if (dir.mkdir()) {
-                System.out.println("----New directory created:" + dir);
+//                System.out.println("----New directory created:" + dir);
             }
 
             File file = new File("" + guid + File.separator + "Content.csv");
@@ -441,7 +444,7 @@ public class Node implements Runnable {
             socNext.close();
 
         }
-        Socket socExit = new Socket(host, 6001);
+        Socket socExit = new Socket(host,6001);
         ObjectOutputStream exitOutput = new ObjectOutputStream(socExit.getOutputStream());
         exitOutput.writeInt(guid);
         exitOutput.flush();
@@ -458,7 +461,7 @@ public class Node implements Runnable {
 
         try {
             ServerSocket serverSoc = new ServerSocket(7000 + guid);
-
+//            System.out.println("Over here waiting for Figure table update");
             while (true) {
                 Socket socket = serverSoc.accept();
                 ObjectInputStream input = new ObjectInputStream(socket.getInputStream());
@@ -469,15 +472,20 @@ public class Node implements Runnable {
                     System.out.println(">>>Updated FingerTable");
                 }
 
+//                System.out.println("Sleeping");
+                Thread.sleep(500);
+//                System.out.println("Done Sleeping");
+
                 synchronized (object) {
                     Node.range = (ArrayList<Integer>) input.readObject();
                     object.notify();
+//                    System.out.println("NOTIFIED");
                 }
 
                 socket.close();
             }
 
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (IOException | ClassNotFoundException | InterruptedException e) {
             e.printStackTrace();
         }
 
@@ -485,7 +493,7 @@ public class Node implements Runnable {
 
     @Override
     public void run() {
-
+//        System.out.println("Node thread started");
         fingerTableUpdate();
     }
 }

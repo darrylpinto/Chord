@@ -38,7 +38,7 @@ public class FileTransferHandler implements Runnable {
                 if (target) {
                     File dir = new File("" + guid);
                     if (dir.mkdir()) {
-                        System.out.println("----New directory created:" + dir);
+//                        System.out.println("----New directory created:" + dir);
                     }
 
                     File file = new File("" + guid + File.separator + "Content.csv");
