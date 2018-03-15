@@ -51,8 +51,8 @@ public class FileTransferHandler implements Runnable {
                         writer.write(fc.target_node + "," + fc.name_of_file + "\n");
                         writer.flush();
 
-                        System.out.printf("'%d,%s' written to file %s\n",
-                                fc.target_node, fc.name_of_file, file.getName());
+                        System.out.printf("Record written to file:\n---\n%d,%s\n---\n",
+                                fc.target_node, fc.name_of_file);
 
                         writer.close();
                     } else {
@@ -62,8 +62,8 @@ public class FileTransferHandler implements Runnable {
                         writer.write(fc.target_node + "," + fc.name_of_file + "\n");
                         writer.flush();
 
-                        System.out.printf("'%d,%s' appended to file %s\n",
-                                fc.target_node, fc.name_of_file, file.getName());
+                        System.out.printf("Record appended to file:\n---\n%d,%s\n---\n",
+                                fc.target_node, fc.name_of_file);
 
                         writer.close();
                     }

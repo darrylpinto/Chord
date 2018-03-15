@@ -12,7 +12,7 @@ import java.util.Scanner;
  * Created by Darryl Pinto on 3/08/2018.
  */
 public class Node implements Runnable {
-    public final static Object object = new Object();
+    public final static Object monitor = new Object();
     static final int n = 4;
     static final int N = (int) Math.pow(2, n);
     static FingerTable fingerTable = new FingerTable();
@@ -57,8 +57,8 @@ public class Node implements Runnable {
         ObjectOutputStream outputNext = new ObjectOutputStream(socNext.getOutputStream());
         ObjectInputStream inputNext = new ObjectInputStream(socNext.getInputStream());
 
-        synchronized (object) {
-            object.wait();
+        synchronized (monitor) {
+            monitor.wait();
             outputNext.writeObject(Node.range);
             outputNext.flush();
 
@@ -314,8 +314,8 @@ public class Node implements Runnable {
                 // csv will contain: target node, name_of_file
                 writer.write(target + "," + name + "\n");
                 writer.flush();
-                System.out.printf("'%d,%s' written to file %s\n",
-                        target, name, file.getName());
+                System.out.printf("Record written to file:\n---\n%d,%s\n---\n",
+                        target, name);
                 writer.close();
             } else {
 
@@ -323,8 +323,9 @@ public class Node implements Runnable {
                 writer.write(target + "," + name + "\n");
                 writer.flush();
 
-                System.out.printf("'%d,%s' appended to file %s\n",
-                        target, name, file.getName());
+                System.out.printf("Record appended to file:\n---\n%d,%s\n---\n",
+                        target, name);
+
                 writer.close();
             }
             return;
@@ -494,10 +495,10 @@ public class Node implements Runnable {
 
                 Thread.sleep(500);
 
-                synchronized (object) {
+                synchronized (monitor) {
 
                     Node.range = (ArrayList<Integer>) input.readObject();
-                    object.notify();
+                    monitor.notify();
                 }
 
                 socket.close();

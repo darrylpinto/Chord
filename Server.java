@@ -23,7 +23,6 @@ public class Server implements Runnable {
     static ConcurrentHashMap<Integer, FingerTable> tableMap = new ConcurrentHashMap<>();
     static ConcurrentHashMap<Integer, Boolean> onlineNodes = new ConcurrentHashMap<>();
     static ConcurrentHashMap<Integer, Integer> nodePredecessor = new ConcurrentHashMap<>();
-    private static ArrayList<Integer> range;
 
 
     public static void main(String[] args) throws UnknownHostException {

@@ -52,10 +52,25 @@ public class NewNodeTransferHandler implements Runnable {
 
                     HashSet<Integer> remoteHS = new HashSet<>();
 
-                    for (int i = remoteRange.get(0); i <= remoteRange.get(1); i++) {
-                        remoteHS.add(i % Node.N);
+                    int start, end;
+                    if(remoteRange.get(0)<= remoteRange.get(1)){
+
+                        start = remoteRange.get(0);
+                        end = remoteRange.get(1);
+
+                    }
+                    else{
+
+                        start = remoteRange.get(0);
+                        end = remoteRange.get(1) + 16;
+
                     }
 
+                    while(start <= end){
+
+                        remoteHS.add(start% Node.N);
+                        start++;
+                    }
 
                     FileReader fr = new FileReader(file);
                     BufferedReader br = new BufferedReader(fr);
@@ -85,6 +100,7 @@ public class NewNodeTransferHandler implements Runnable {
                     writer.flush();
 
                     System.out.println("Data transfer because of node added to the network");
+                    System.out.println("RemoteHS:"+remoteHS+" remote range:"+ remoteRange);
                     System.out.println("Data written to local file:\n----\n" + dataToKeep + "----");
                     writer.close();
                     System.out.println("Data sent to newly added node:\n----\n" + dataToSend + "----");

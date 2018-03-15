@@ -46,7 +46,8 @@ public class QuitHandler implements Runnable {
 
                     System.out.println("Data transfer because of node " +
                             "quitting the network");
-                    System.out.println(data + "written to file");
+
+                    System.out.println("Data written to file:\n---\n" + data + "---");
                     writer.close();
 
                 } else {
@@ -57,7 +58,9 @@ public class QuitHandler implements Runnable {
 
                     System.out.println("Data transfer because of node" +
                             " quitting the network");
-                    System.out.println(data + "appended to file");
+
+                    System.out.println("Data appended to file:\n---\n" + data + "---");
+
                     writer.close();
                 }
             }
