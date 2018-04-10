@@ -6,20 +6,33 @@ import java.util.HashSet;
 
 /**
  * Created by Darryl Pinto on 3/13/2018.
+ *
+ * Class to handle transfer of files when a
+ * new node comes up
  */
 public class NewNodeTransferHandler implements Runnable {
 
     int guid;
 
+    /**
+     * Constructor of NewNodeTransferHandler
+     * @param guid Node id
+     */
     NewNodeTransferHandler(int guid) {
         this.guid = guid;
     }
 
+    /**
+     * Run method to run a thread that waits for data request from new node
+     */
     @Override
     public void run() {
         newNodeDataRequest();
     }
 
+    /**
+     * Method that waits for data request from new node
+     */
     private void newNodeDataRequest() {
 
         try {
@@ -100,7 +113,6 @@ public class NewNodeTransferHandler implements Runnable {
                     writer.flush();
 
                     System.out.println("Data transfer because of node added to the network");
-                    System.out.println("RemoteHS:"+remoteHS+" remote range:"+ remoteRange);
                     System.out.println("Data written to local file:\n----\n" + dataToKeep + "----");
                     writer.close();
                     System.out.println("Data sent to newly added node:\n----\n" + dataToSend + "----");

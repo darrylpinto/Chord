@@ -4,20 +4,32 @@ import java.net.Socket;
 
 /**
  * Created by Darryl Pinto on 3/13/2018.
+ * <p>
+ * Class to handle file retrieval request
  */
 public class NodeRetriever implements Runnable {
     int guid;
 
+    /**
+     * Constructor of NodeRetriever
+     *
+     * @param guid node id
+     */
     public NodeRetriever(int guid) {
         this.guid = guid;
     }
 
-
+    /**
+     * Run method to run a thread that waits for retrieve request
+     */
     @Override
     public void run() {
         retrieve();
     }
 
+    /**
+     * Method that waits for retrieve request
+     */
     private void retrieve() {
 
         try {

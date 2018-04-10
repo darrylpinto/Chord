@@ -9,12 +9,14 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by Darryl Pinto on 3/08/2018.
+ * <p>
+ * Class that represents the Server in Chord
+ * Server communicates with nodes when they enter or exit Chord system
  */
-
 
 public class Server implements Runnable {
     private static final int n = 4;
-    private static final int N = (int) Math.pow(2, n);
+    private static final int N = (int) Math.pow(2, n); // number of nodes that can be supported
 
     private static final int serverPort = 6000;
 
@@ -24,7 +26,11 @@ public class Server implements Runnable {
     static ConcurrentHashMap<Integer, Boolean> onlineNodes = new ConcurrentHashMap<>();
     static ConcurrentHashMap<Integer, Integer> nodePredecessor = new ConcurrentHashMap<>();
 
-
+    /**
+     * @param args Command Line arguments
+     * @throws UnknownHostException Exception is thrown when IP address
+     *                              of host can't be determined
+     */
     public static void main(String[] args) throws UnknownHostException {
 
         deleteFiles();
@@ -60,6 +66,10 @@ public class Server implements Runnable {
         }
     }
 
+    /**
+     * Method to delete any old files
+     * (used while debugging on local host)
+     */
     private static void deleteFiles() {
         // delete old files if any ( Used for testing on local machine)
         for (int i = 0; i < N; i++) {
@@ -85,6 +95,9 @@ public class Server implements Runnable {
         }
     }
 
+    /**
+     * Method to compute all tables
+     */
     public static void computeTables() {
 
         for (int i = 0; i < N; i++) {
@@ -95,26 +108,37 @@ public class Server implements Runnable {
         }
     }
 
-    private static void computeEachTable(int k) {
+    /**
+     * Method to compute table for node z
+     *
+     * @param z node id
+     */
+    private static void computeEachTable(int z) {
 
         int[][] table = new int[n][3];
         InetAddress[] ip = new InetAddress[n];
         for (int i = 0; i < n; i++) {
 
             table[i][0] = i;
-            table[i][1] = (k + (int) Math.pow(2, i)) % 16;
+            table[i][1] = (z + (int) Math.pow(2, i)) % 16;
 
             table[i][2] = findSuccessor(table[i][1]);   // successor
             ip[i] = connectionMap.get(table[i][2]).getInetAddress();
         }
 
-        tableMap.put(k, new FingerTable(k, table, ip));
+        tableMap.put(z, new FingerTable(z, table, ip));
 
     }
 
-    private static int findSuccessor(int no) {
+    /**
+     * Successor of Node z
+     *
+     * @param z Node id
+     * @return the successor
+     */
+    private static int findSuccessor(int z) {
 
-        int iter = no;
+        int iter = z;
 
         if (onlineNodes.containsKey(iter)) {
             return iter;
@@ -131,6 +155,11 @@ public class Server implements Runnable {
         }
     }
 
+    /**
+     * Method to send the computed Tables to the nodes
+     *
+     * @throws IOException Excpetion is thrown when IO error occurs
+     */
     public static void sendTables() throws IOException {
 
         for (int i = 0; i < N; i++) {
@@ -162,6 +191,12 @@ public class Server implements Runnable {
 
     }
 
+    /**
+     * Method to get the next node
+     *
+     * @param guid node id
+     * @return the next node
+     */
     public static int nextNode(int guid) {
         int iter = guid;
         while (true) {
@@ -172,6 +207,12 @@ public class Server implements Runnable {
         }
     }
 
+    /**
+     * Method to compute range of nodes present
+     *
+     * @param guid Node id
+     * @return The range
+     */
     private static ArrayList<Integer> computeRange(int guid) {
         ArrayList<Integer> rangeList = new ArrayList<>(2);
 
@@ -191,6 +232,9 @@ public class Server implements Runnable {
         return rangeList;
     }
 
+    /**
+     * Method to handle node exit situation
+     */
     public static void exitUser() {
 
         try {
@@ -225,7 +269,9 @@ public class Server implements Runnable {
 
     }
 
-
+    /**
+     * Method to run a thread that handles node exit situation
+     */
     @Override
     public void run() {
 

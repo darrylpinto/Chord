@@ -6,6 +6,9 @@ import java.net.Socket;
 
 /**
  * Created by Darryl Pinto on 3/12/2018.
+ * <p>
+ * Server Registration class registers new nodes
+ * This class is running on other thread waiting for new updates
  */
 
 class ServerRegistration implements Runnable {
@@ -16,6 +19,9 @@ class ServerRegistration implements Runnable {
         this.socket = socket;
     }
 
+    /**
+     * The run method runs a thread that is waiting for registration
+     */
     @Override
     public void run() {
         String _guid = "";

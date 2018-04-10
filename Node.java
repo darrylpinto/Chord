@@ -10,6 +10,8 @@ import java.util.Scanner;
 
 /**
  * Created by Darryl Pinto on 3/08/2018.
+ * <p>
+ * The Node class represents the node in Chord DHT
  */
 public class Node implements Runnable {
     public final static Object monitor = new Object();
@@ -19,6 +21,14 @@ public class Node implements Runnable {
     static int guid;
     static ArrayList<Integer> range = new ArrayList<>();
 
+    /**
+     * The main method
+     *
+     * @param args Command Line Arguments
+     * @throws IOException            Exception if IO errors occur
+     * @throws ClassNotFoundException Exception thrown if type-casting fails
+     * @throws InterruptedException   Exception thrown if Thread is interrupted
+     */
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
 
         String host;
@@ -153,6 +163,11 @@ public class Node implements Runnable {
         }
     }
 
+    /**
+     * Method to get the files stored on the current node
+     *
+     * @throws IOException Exception if IO errors occur
+     */
     private static void getContentsFromNode() throws IOException {
 
         File dir = new File("" + guid);
@@ -180,6 +195,15 @@ public class Node implements Runnable {
         }
     }
 
+    /**
+     * Method to retrieve a file from the target node
+     * The request is routed to the next possible
+     * node with the help of finger table
+     *
+     * @param name File name
+     * @return boolean indicating if file is found or not
+     * @throws IOException Exception if IO errors occur
+     */
     static boolean retrieve(String name) throws IOException {
         int target = Math.abs(name.hashCode() % N);
 
@@ -276,6 +300,16 @@ public class Node implements Runnable {
         return false;
     }
 
+    /**
+     * Method to pass the retrieval request to successor node
+     *
+     * @param target_ip The target ip
+     * @param name      File name
+     * @param successor The node id of successor
+     * @param b         boolean indicating if target node or not
+     * @return file
+     * @throws IOException Exception if IO errors occur
+     */
     private static boolean toRetrieve(InetAddress target_ip, String name,
                                       int successor, boolean b) throws IOException {
 
@@ -297,7 +331,12 @@ public class Node implements Runnable {
 
     }
 
-
+    /**
+     * Method to create the request to create a file
+     *
+     * @param name name of the file to be created
+     * @throws IOException Exception if IO errors occur
+     */
     static void route(String name) throws IOException {
 
         int target = Math.abs(name.hashCode() % N);
@@ -341,7 +380,6 @@ public class Node implements Runnable {
         int kplus2i = -1;
         try {
             InetAddress potential_target_ip = InetAddress.getLocalHost();
-
 
             for (int i = 0; i < fingerTable.table.length; i++) {
 
@@ -402,6 +440,16 @@ public class Node implements Runnable {
 
     }
 
+    /**
+     * Method to route the crete request to successor
+     *
+     * @param target_ip The target ip
+     * @param name      File name
+     * @param target    The node id of target
+     * @param successor The node id of successor
+     * @param b         boolean indicating if file is found or not
+     * @throws IOException Exception if IO errors occur
+     */
     private static void sendFileToTarget(InetAddress target_ip, String name, int target,
                                          int successor, boolean b) throws IOException {
         // open socket, send data and return
@@ -424,6 +472,12 @@ public class Node implements Runnable {
 
     }
 
+    /**
+     * Method to quit the system. The host server is notified
+     *
+     * @param host The host server
+     * @throws IOException Exception if IO error occurs
+     */
     static void quit(String host) throws IOException {
         System.out.println("Preparing to Stop");
 
@@ -453,7 +507,8 @@ public class Node implements Runnable {
             fr.close();
 
             if (Files.deleteIfExists(files.get(0).toPath())) {
-                System.out.println("Data in " + files.get(0) + " sent to " + nextSuccessor + " and deleted locally");
+                System.out.println("Data in " + files.get(0) + " sent to " +
+                        nextSuccessor + " and deleted locally");
             } else {
                 System.out.println("Error in DELETE");
 
@@ -477,7 +532,9 @@ public class Node implements Runnable {
         System.exit(0);
     }
 
-
+    /**
+     * Method to receive finger table updates from other nodes
+     */
     public static void fingerTableUpdate() {
 
         try {
@@ -510,6 +567,9 @@ public class Node implements Runnable {
 
     }
 
+    /**
+     * The method to listen for finger table updates
+     */
     @Override
     public void run() {
         fingerTableUpdate();

@@ -6,12 +6,19 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 /**
- * Created by Darryl Pinto on 3/13/2018.
+ * Created by Darryl Pinto on 3/13/2018.from the system
+ *
+ * This class is running on other thread waiting for a node to quit
+ * The data is transferred from the quitting node to this node
  */
 
 public class QuitHandler implements Runnable {
     int guid;
 
+    /**
+     * Constructor for QuitHandler
+     * @param id Node id
+     */
     public QuitHandler(int id) {
 
         this.guid = id;
@@ -22,6 +29,9 @@ public class QuitHandler implements Runnable {
         listenForDeleteTransfer();
     }
 
+    /**
+     * Method that writes data received from the quitting node
+     */
     private void listenForDeleteTransfer() {
 
         try {

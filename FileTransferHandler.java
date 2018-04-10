@@ -7,20 +7,34 @@ import java.net.Socket;
 
 /**
  * Created by Darryl Pinto on 3/12/2018.
+ * <p>
+ * Class to handle transfer of files when a
+ * file is created and routed to the target node
  */
 public class FileTransferHandler implements Runnable {
 
     int guid;
 
+    /**
+     * Constructor of FileTransferHandler
+     *
+     * @param guid node id
+     */
     FileTransferHandler(int guid) {
         this.guid = guid;
     }
 
+    /**
+     * Run method to run a thread that waits for create request
+     */
     @Override
     public void run() {
         listenForFileTransfer();
     }
 
+    /**
+     * method that waits for create request
+     */
     private void listenForFileTransfer() {
 
         try {
